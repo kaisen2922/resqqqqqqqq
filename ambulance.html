@@ -1,0 +1,2193 @@
+<!DOCTYPE html>
+<html lang="en" class="h-full">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RESQ - Smart Emergency Healthcare Coordination System</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        medical: {
+                            50: '#f0f7ff',
+                            100: '#e0effe',
+                            200: '#bae2fd',
+                            500: '#0284c7',
+                            600: '#2563eb',
+                            700: '#1d4ed8',
+                            900: '#1e3a8a'
+                        },
+                        alert: {
+                            coral: '#ef4444',
+                            amber: '#f59e0b',
+                            green: '#10b981'
+                        }
+                    },
+                    fontFamily: {
+                        sans: ['Plus Jakarta Sans', 'sans-serif']
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Work+Sans:wght@400;600;800&display=swap');
+        
+        body {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            background: linear-gradient(135deg, #f0f7ff 0%, #ffffff 50%, #e6f0fa 100%);
+            scrollbar-width: thin;
+            scrollbar-color: rgba(37, 99, 235, 0.2) rgba(255, 255, 255, 0.5);
+        }
+
+        .header-title {
+            font-family: 'Work Sans', sans-serif;
+        }
+
+        .glass {
+            background: rgba(255, 255, 255, 0.85);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid rgba(37, 99, 235, 0.12);
+            box-shadow: 0 10px 30px -5px rgba(37, 99, 235, 0.05);
+        }
+
+        @keyframes pulse-radar {
+            0% { transform: scale(0.95); opacity: 0.6; }
+            50% { opacity: 0.9; }
+            100% { transform: scale(1.4); opacity: 0; }
+        }
+
+        .radar-wave {
+            animation: pulse-radar 2.5s infinite ease-out;
+        }
+
+        .custom-scrollbar::-webkit-scrollbar {
+            width: 6px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background: rgba(255, 255, 255, 0.5);
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background-color: rgba(37, 99, 235, 0.2);
+            border-radius: 20px;
+        }
+
+        /* Embedded Iframe Enhancements */
+        .in-iframe header {
+            display: none !important;
+        }
+        .in-iframe body {
+            background: #FFFFFF !important;
+        }
+        .in-iframe .view-panel {
+            padding: 12px !important;
+            gap: 12px !important;
+        }
+        .in-iframe #view-user > div {
+            padding: 4px !important;
+        }
+    </style>
+    <script>
+        if (window.self !== window.top) {
+            document.documentElement.classList.add('in-iframe');
+        }
+    </script>
+</head>
+<body class="h-full text-slate-800 flex flex-col overflow-hidden">
+
+    <!-- HEADER NAVIGATION BAR -->
+    <header class="glass border-b border-blue-100/80 px-6 py-4 flex flex-wrap items-center justify-between z-50 shrink-0">
+        <div class="flex items-center space-x-3 cursor-pointer" onclick="switchView('user')">
+            <div class="relative w-10 h-10 flex items-center justify-center bg-blue-50 rounded-lg border border-blue-200">
+                <i class="fa-solid fa-heart-pulse text-blue-600 text-xl animate-pulse"></i>
+                <div class="absolute inset-0 rounded-lg border border-blue-500/20 radar-wave"></div>
+            </div>
+            <div>
+                <span class="header-title font-black text-lg bg-gradient-to-r from-blue-700 to-indigo-600 bg-clip-text text-transparent tracking-wider">RESQ</span>
+                <p class="text-[9px] text-blue-500 tracking-widest uppercase font-bold">Smart Emergency Healthcare Sync</p>
+            </div>
+        </div>
+
+        <nav class="hidden xl:flex items-center space-x-1 glass p-1 rounded-xl border border-blue-100/80 bg-white/90">
+            <button onclick="switchView('user')" class="nav-btn px-4 py-2 rounded-lg text-sm transition-all duration-300 flex items-center space-x-2 text-slate-600" data-target="user">
+                <i class="fa-solid fa-hospital-user"></i> <span>Patient Portal</span>
+            </button>
+            <button onclick="switchView('tracking')" class="nav-btn px-4 py-2 rounded-lg text-sm transition-all duration-300 flex items-center space-x-2 text-slate-600" data-target="tracking">
+                <i class="fa-solid fa-map-location-dot"></i> <span>Ambulance Tracking</span>
+            </button>
+            <button onclick="switchView('nurse')" class="nav-btn px-4 py-2 rounded-lg text-sm transition-all duration-300 flex items-center space-x-2 text-slate-600" data-target="nurse">
+                <i class="fa-solid fa-user-nurse"></i> <span>Paramedic Tablet</span>
+            </button>
+            <button onclick="switchView('hospital')" class="nav-btn px-4 py-2 rounded-lg text-sm transition-all duration-300 flex items-center space-x-2 text-slate-600" data-target="hospital">
+                <i class="fa-solid fa-hospital"></i> <span>ER Command</span>
+            </button>
+            <div class="h-4 w-[1px] bg-blue-100 mx-2"></div>
+            <button onclick="switchView('simulator')" class="nav-btn px-4 py-2 rounded-lg text-sm font-semibold transition-all duration-300 flex items-center space-x-2 bg-blue-50 border border-blue-200 text-blue-600" data-target="simulator">
+                <i class="fa-solid fa-laptop-code"></i> <span>Split-Screen Live Demo</span>
+            </button>
+        </nav>
+
+        <div class="flex items-center space-x-4">
+            <div class="flex items-center space-x-2 text-xs">
+                <span id="db-indicator-dot" class="w-2.5 h-2.5 rounded-full bg-blue-500 animate-pulse"></span>
+                <span id="db-indicator-text" class="text-slate-500 font-mono font-medium">Local Simulator Active</span>
+            </div>
+            <button onclick="toggleAudioMute()" id="audio-toggle-btn" class="w-8 h-8 rounded-lg bg-white border border-blue-100 hover:border-blue-500/50 flex items-center justify-center transition-all shadow-sm">
+                <i class="fa-solid fa-volume-high text-slate-500 text-sm"></i>
+            </button>
+        </div>
+    </header>
+
+    <main class="flex-1 overflow-hidden relative">
+
+        <!-- PATIENT REGISTRATION PORTAL -->
+        <section id="view-user" class="view-panel active-panel h-full overflow-y-auto md:overflow-hidden p-6 flex flex-col md:flex-row gap-6">
+            <div class="w-full md:w-[45%] flex flex-col gap-4 md:h-full md:overflow-y-auto custom-scrollbar pb-24 md:pb-4">
+                <div class="glass p-5 rounded-2xl">
+                    <div class="flex justify-between items-center mb-2">
+                        <h2 class="header-title text-xl font-bold text-slate-900 flex items-center space-x-2">
+                            <i class="fa-solid fa-clipboard-list text-blue-600"></i>
+                            <span>Ambulance Request Form</span>
+                        </h2>
+                        <button onclick="triggerParentToggleChat()" type="button" class="text-xs font-bold text-blue-600 hover:text-blue-800 flex items-center space-x-1.5 px-3 py-1.5 rounded-lg bg-blue-50 border border-blue-100/50 hover:bg-blue-100 transition-all">
+                            <i class="fa-solid fa-robot"></i>
+                            <span>AI Help</span>
+                        </button>
+                    </div>
+                    <p class="text-xs text-slate-500 mb-4">Select an Emergency Cause for instant configuration, or manually fill the form below.</p>
+                    
+                    <div class="grid grid-cols-2 gap-3 mb-4">
+                        <button id="preset-btn-heart_attack" onclick="loadSymptomPreset('heart_attack')" class="p-3 rounded-xl border border-slate-100 bg-white hover:border-red-300 text-left transition-all group shadow-sm">
+                            <span class="block text-xs text-slate-400">Emergency Cause</span>
+                            <span class="block text-sm font-bold text-red-600 group-hover:text-red-700"><i class="fa-solid fa-heart-pulse mr-1"></i> Heart Attack</span>
+                        </button>
+                        <button id="preset-btn-accident" onclick="loadSymptomPreset('accident')" class="p-3 rounded-xl border border-slate-100 bg-white hover:border-red-300 text-left transition-all group shadow-sm">
+                            <span class="block text-xs text-slate-400">Emergency Cause</span>
+                            <span class="block text-sm font-bold text-rose-600 group-hover:text-rose-700"><i class="fa-solid fa-car-burst mr-1"></i> Accident</span>
+                        </button>
+                        <button id="preset-btn-stroke" onclick="loadSymptomPreset('stroke')" class="p-3 rounded-xl border border-slate-100 bg-white hover:border-amber-300 text-left transition-all group shadow-sm">
+                            <span class="block text-xs text-slate-400">Emergency Cause</span>
+                            <span class="block text-sm font-bold text-amber-600 group-hover:text-amber-700"><i class="fa-solid fa-brain mr-1"></i> Stroke</span>
+                        </button>
+                        <button id="preset-btn-breathing" onclick="loadSymptomPreset('breathing')" class="p-3 rounded-xl border border-slate-100 bg-white hover:border-blue-300 text-left transition-all group shadow-sm">
+                            <span class="block text-xs text-slate-400">Emergency Cause</span>
+                            <span class="block text-sm font-bold text-blue-600 group-hover:text-blue-700"><i class="fa-solid fa-lungs mr-1"></i> Dyspnea</span>
+                        </button>
+                        <button id="preset-btn-pregnancy" onclick="loadSymptomPreset('pregnancy')" class="p-3 rounded-xl border border-slate-100 bg-white hover:border-purple-300 text-left transition-all group shadow-sm">
+                            <span class="block text-xs text-slate-400">Emergency Cause</span>
+                            <span class="block text-sm font-bold text-purple-600 group-hover:text-purple-700"><i class="fa-solid fa-baby mr-1"></i> Pregnancy</span>
+                        </button>
+                        <button id="preset-btn-fever" onclick="loadSymptomPreset('fever')" class="p-3 rounded-xl border border-slate-100 bg-white hover:border-teal-300 text-left transition-all group shadow-sm">
+                            <span class="block text-xs text-slate-400">Emergency Cause</span>
+                            <span class="block text-sm font-bold text-teal-600 group-hover:text-teal-700"><i class="fa-solid fa-temperature-arrow-up mr-1"></i> High Fever</span>
+                        </button>
+                    </div>
+
+                    <!-- AI INTERACTIVE TRIAGE ASSISTANT SECTION -->
+                    <div id="ai-triage-card" class="mb-5 p-4 rounded-xl border border-blue-100 bg-blue-50/40 hidden transition-all duration-300">
+                        <div class="flex items-center space-x-2 text-blue-600 text-xs font-bold uppercase tracking-wider mb-2">
+                            <i class="fa-solid fa-brain animate-pulse"></i>
+                            <span>RESQ AI Triage Assistant</span>
+                        </div>
+                        <p id="ai-triage-question" class="text-xs text-slate-700 font-medium mb-3">Checking vitals anomalies...</p>
+                        <div class="flex items-center space-x-2">
+                            <button onclick="answerTriage(true)" class="px-4 py-1.5 bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs rounded-lg transition-all shadow-sm">Yes</button>
+                            <button onclick="answerTriage(false)" class="px-4 py-1.5 bg-slate-200 hover:bg-slate-300 text-slate-700 font-bold text-xs rounded-lg transition-all shadow-sm">No</button>
+                        </div>
+                    </div>
+
+                    <form id="emergency-form" onsubmit="handleEmergencySubmit(event)" class="space-y-4">
+                        <div>
+                            <label class="block text-xs text-slate-500 uppercase tracking-widest mb-1.5 font-semibold">Patient Full Name</label>
+                            <input id="user-patient-name" type="text" required class="w-full bg-white border border-blue-100 focus:border-blue-500 rounded-xl px-4 py-2.5 text-sm text-slate-800 outline-none transition-all shadow-sm" placeholder="Please enter patient name">
+                        </div>
+                        <div class="grid grid-cols-2 gap-3">
+                            <div>
+                                <label class="block text-xs text-slate-500 uppercase tracking-widest mb-1.5 font-semibold">Age</label>
+                                <input id="user-patient-age" type="number" required class="w-full bg-white border border-blue-100 focus:border-blue-500 rounded-xl px-4 py-2.5 text-sm text-slate-800 outline-none transition-all shadow-sm" placeholder="Enter age">
+                            </div>
+                            <div>
+                                <label class="block text-xs text-slate-500 uppercase tracking-widest mb-1.5 font-semibold">Blood Group</label>
+                                <select id="user-patient-blood" required class="w-full bg-white border border-blue-100 focus:border-blue-500 rounded-xl px-4 py-2.5 text-sm text-slate-800 outline-none transition-all shadow-sm">
+                                    <option value="">Select blood type</option>
+                                    <option value="A+">A+</option>
+                                    <option value="A-">A-</option>
+                                    <option value="B+">B+</option>
+                                    <option value="B-">B-</option>
+                                    <option value="AB+">AB+</option>
+                                    <option value="AB-">AB-</option>
+                                    <option value="O+">O+</option>
+                                    <option value="O-">O-</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div>
+                            <label class="block text-xs text-slate-500 uppercase tracking-widest mb-1.5 font-semibold">Current Vitals / Symptoms</label>
+                            <textarea id="user-patient-symptoms" required rows="2" class="w-full bg-white border border-blue-100 focus:border-blue-500 rounded-xl px-4 py-2.5 text-sm text-slate-800 outline-none transition-all shadow-sm" placeholder="Describe symptoms or ongoing medical emergency details here..."></textarea>
+                        </div>
+                        <div class="grid grid-cols-2 gap-3">
+                            <div>
+                                <label class="block text-xs text-slate-500 uppercase tracking-widest mb-1.5 font-semibold">Select Region</label>
+                                <select id="user-patient-region" onchange="onRegionChange()" required class="w-full bg-white border border-blue-100 focus:border-blue-500 rounded-xl px-4 py-2.5 text-sm text-slate-800 outline-none transition-all shadow-sm">
+                                    <option value="">Select Region</option>
+                                    <option value="Behala">Behala Region</option>
+                                    <option value="Tollygunge">Tollygunge Region</option>
+                                    <option value="New Town">New Town Region</option>
+                                    <option value="Ballygunge">Ballygunge Region</option>
+                                    <option value="Salt Lake">Salt Lake Region</option>
+                                </select>
+                            </div>
+                            <div>
+                                <div class="flex justify-between items-center mb-1.5">
+                                    <label class="block text-xs text-slate-500 uppercase tracking-widest font-semibold">Patient Address</label>
+                                    <button type="button" onclick="useCurrentGPS()" class="text-[10px] text-blue-600 hover:text-blue-800 font-bold flex items-center space-x-1">
+                                        <i class="fa-solid fa-location-crosshairs"></i>
+                                        <span>Use GPS</span>
+                                    </button>
+                                </div>
+                                <input id="user-patient-address" type="text" oninput="detectRegionFromAddress(this.value)" required class="w-full bg-white border border-blue-100 focus:border-blue-500 rounded-xl px-4 py-2.5 text-sm text-slate-800 outline-none transition-all shadow-sm" placeholder="Street, block, or crossing details">
+                            </div>
+                        </div>
+                        <div class="grid grid-cols-2 gap-3">
+                            <div>
+                                <label class="block text-xs text-slate-500 uppercase tracking-widest mb-1.5 font-semibold">Preferred Hospital</label>
+                                <select id="user-patient-hospital-pref" class="w-full bg-white border border-blue-100 focus:border-blue-500 rounded-xl px-4 py-2.5 text-sm text-slate-800 outline-none transition-all shadow-sm">
+                                    <option value="AUTO">No Preference (Auto-Suggest)</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block text-xs text-slate-500 uppercase tracking-widest mb-1.5 font-semibold">Ambulance Class</label>
+                                <select id="user-patient-ambulance-pref" class="w-full bg-white border border-blue-100 focus:border-blue-500 rounded-xl px-4 py-2.5 text-sm text-slate-800 outline-none transition-all shadow-sm">
+                                    <option value="AUTO">No Preference (Auto-Suggest)</option>
+                                    <option value="BLS">Basic Life Support (BLS)</option>
+                                    <option value="ALS">Advanced Life Support (ALS)</option>
+                                    <option value="MICU">Mobile Intensive Care (MICU)</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <button type="submit" class="w-full py-4 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white rounded-xl font-bold tracking-wider uppercase transition-all shadow-lg shadow-blue-500/10">
+                            Analyze Emergency &amp; Dispatch
+                        </button>
+                    </form>
+                </div>
+            </div>
+
+            <div class="flex-1 flex flex-col gap-4 md:h-full md:overflow-hidden pb-12 md:pb-4">
+                <div id="user-ai-analysis-container" class="glass p-6 rounded-2xl flex-1 flex flex-col items-center justify-center relative overflow-hidden min-h-[300px]">
+                    <div id="ai-scanning-overlay" class="hidden absolute inset-0 bg-white/95 flex flex-col items-center justify-center z-10 space-y-4">
+                        <div class="relative w-24 h-24">
+                            <div class="absolute inset-0 rounded-full border border-blue-400/30 animate-ping"></div>
+                            <div class="absolute inset-2 rounded-full border border-blue-500 animate-spin border-t-transparent"></div>
+                            <div class="absolute inset-4 rounded-full border border-indigo-400 animate-pulse flex items-center justify-center">
+                                <i class="fa-solid fa-brain text-blue-600 text-xl"></i>
+                            </div>
+                        </div>
+                        <div class="text-center space-y-1.5">
+                            <h4 class="header-title font-bold text-slate-900 tracking-widest text-sm">RESQ AI ROUTING ENGINE</h4>
+                            <p id="ai-status-step" class="text-blue-600 text-xs font-mono">Consulting active hospital inventory lists...</p>
+                        </div>
+                    </div>
+
+                    <div id="ai-waiting-placeholder" class="text-center space-y-3">
+                        <div class="w-16 h-16 rounded-full bg-blue-50 border border-blue-100 flex items-center justify-center mx-auto mb-2 text-blue-600 shadow-sm">
+                            <i class="fa-solid fa-satellite-dish text-2xl animate-pulse"></i>
+                        </div>
+                        <h3 class="header-title text-lg font-bold text-slate-900">Interactive Emergency Terminal</h3>
+                        <p class="text-xs text-slate-500 max-w-sm mx-auto">Fill the emergency form or select a cause category on the left to start the dynamic RESQ routing pipeline.</p>
+                    </div>
+
+                    <div id="ai-result-panel" class="hidden w-full h-full flex flex-col justify-between">
+                        <div>
+                            <div class="flex items-center justify-between mb-4">
+                                <span class="bg-red-50 border border-red-200 text-red-600 text-xs px-3 py-1 rounded-full font-semibold flex items-center space-x-1.5 shadow-sm">
+                                    <i class="fa-solid fa-triangle-exclamation animate-pulse"></i>
+                                    <span id="ai-badge-severity">SEVERITY: CRITICAL</span>
+                                </span>
+                                <span class="text-xs text-slate-500 font-mono" id="ai-timestamp">TELEMETRY ID: #9842</span>
+                            </div>
+                            
+                            <h3 class="header-title text-xl font-extrabold text-slate-900 mb-2" id="ai-emergency-type">TRAUMA SYSTEM CALIBRATION</h3>
+                            <p class="text-xs text-slate-600 mb-6" id="ai-reason-statement">Symptom pattern warrants high priority dispatch. Automatic routing triggered to match physical capability vectors.</p>
+                            
+                            <div class="grid grid-cols-2 gap-4">
+                                <div class="p-4 rounded-xl border border-blue-100 bg-blue-50/40">
+                                    <div class="flex items-center space-x-2 text-blue-600 mb-2">
+                                        <i class="fa-solid fa-hospital"></i>
+                                        <span class="text-xs font-bold uppercase tracking-wider">Assigned ER</span>
+                                    </div>
+                                    <p class="font-bold text-slate-900 text-sm" id="ai-assigned-hospital">Apex Trauma Center</p>
+                                    <span class="text-[10px] text-slate-500 block mt-1" id="ai-hospital-meta">4 ICU Beds Open • Stroke Team Armed</span>
+                                </div>
+
+                                <div class="p-4 rounded-xl border border-indigo-100 bg-indigo-50/40">
+                                    <div class="flex items-center space-x-2 text-indigo-600 mb-2">
+                                        <i class="fa-solid fa-ambulance"></i>
+                                        <span class="text-xs font-bold uppercase tracking-wider">Dispatched Unit</span>
+                                    </div>
+                                    <p class="font-bold text-slate-900 text-sm" id="ai-assigned-ambulance">Alpha-04 (MICU Class)</p>
+                                    <span class="text-[10px] text-slate-500 block mt-1" id="ai-ambulance-meta">Medic: S. Carter • ETA 6 mins</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="border-t border-blue-100 pt-4 flex items-center justify-between mt-6">
+                            <div class="flex items-center space-x-3">
+                                <div class="relative w-8 h-8 rounded-full bg-blue-50 border border-blue-100 flex items-center justify-center text-blue-600 text-xs shadow-sm">
+                                    <i class="fa-solid fa-location-crosshairs animate-spin"></i>
+                                </div>
+                                <div>
+                                    <span class="block text-[10px] text-slate-500 uppercase tracking-widest font-semibold">Live Feed</span>
+                                    <span class="block text-xs font-bold text-slate-900">Awaiting Connection...</span>
+                                </div>
+                            </div>
+                            <button onclick="transitionToTracking()" class="px-5 py-2.5 bg-blue-600 text-white font-bold text-xs rounded-xl uppercase tracking-wider hover:bg-blue-700 transition-all flex items-center space-x-2 shadow-sm animate-pulse">
+                                <span>Track Live Unit</span>
+                                <i class="fa-solid fa-arrow-right"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- TRACKING VIEW - FIXED THE MAP CLIPPING IN PORTRAIT MODE -->
+        <section id="view-tracking" class="view-panel hidden h-full overflow-y-auto md:overflow-hidden p-6 flex flex-col md:flex-row gap-6">
+            <!-- Left Side: Map with guaranteed height and min-height -->
+            <div class="w-full md:flex-1 h-80 md:h-full min-h-[300px] md:min-h-0 flex flex-col gap-4 overflow-hidden relative shrink-0 md:shrink">
+                <div class="glass rounded-2xl flex-1 overflow-hidden relative h-full w-full shadow-md">
+                    <div id="live-map" class="w-full h-full z-10 animate-fade-in"></div>
+                    <div class="absolute top-4 left-4 z-20 glass px-4 py-2.5 rounded-xl border border-blue-100 flex items-center space-x-2 pointer-events-none shadow-md">
+                        <span class="w-2 h-2 rounded-full bg-blue-600 animate-ping"></span>
+                        <span class="text-xs font-semibold uppercase tracking-wider text-slate-950">Realtime GPS Streams Active</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right Side: Details scroll panel -->
+            <div class="w-full md:w-[40%] flex flex-col gap-4 md:h-full md:overflow-y-auto custom-scrollbar pb-24 md:pb-4 shrink-0 md:shrink">
+                <div class="glass p-5 rounded-2xl relative overflow-hidden">
+                    <div class="absolute -top-10 -right-10 w-24 h-24 bg-blue-500/10 rounded-full blur-xl"></div>
+                    
+                    <h2 class="header-title text-lg font-bold text-slate-900 mb-4 flex items-center justify-between">
+                        <span class="flex items-center space-x-2">
+                            <i class="fa-solid fa-compass-drafting text-blue-600"></i>
+                            <span>Dispatched Unit Stream</span>
+                        </span>
+                        <span class="bg-red-50 border border-red-200 text-red-600 text-xs px-2.5 py-1 rounded-full font-mono font-bold shadow-sm" id="tracking-eta-timer">06:00 MINS</span>
+                    </h2>
+
+                    <div class="space-y-4">
+                        <div class="grid grid-cols-2 gap-3">
+                            <div class="p-3 bg-slate-50 border border-slate-100 rounded-xl">
+                                <span class="block text-[10px] text-slate-500 uppercase tracking-widest font-semibold">Hospital Destination</span>
+                                <span class="block text-sm font-bold text-slate-900 mt-0.5 truncate" id="track-dest-hospital">Apex Trauma Center</span>
+                            </div>
+                            <div class="p-3 bg-slate-50 border border-slate-100 rounded-xl">
+                                <span class="block text-[10px] text-slate-500 uppercase tracking-widest font-semibold">Unit Vehicle</span>
+                                <span class="block text-sm font-bold text-slate-900 mt-0.5" id="track-unit-id">ALS-Ambulance Alpha-04</span>
+                            </div>
+                        </div>
+
+                        <div class="border-t border-blue-100 pt-3">
+                            <span class="block text-[10px] text-slate-500 uppercase tracking-widest font-semibold mb-2">Assigned Personnel</span>
+                            <div class="flex items-center space-x-3">
+                                <div class="w-10 h-10 rounded-xl bg-blue-50 border border-blue-100 flex items-center justify-center text-blue-600">
+                                    <i class="fa-solid fa-user-doctor"></i>
+                                </div>
+                                <div class="flex-1">
+                                    <span class="block text-xs font-bold text-slate-900" id="track-personnel-nurse">S. Carter, Paramedic Critical Care</span>
+                                    <span class="block text-[10px] text-slate-500" id="track-personnel-driver">Driver: D. Vance • Lic# EMT-9082</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="border-t border-blue-100 pt-3">
+                            <span class="block text-[10px] text-slate-500 uppercase tracking-widest font-semibold mb-2">Realtime Pathing Status</span>
+                            <div class="flex items-center space-x-3">
+                                <span class="w-5 h-5 rounded-full bg-blue-100 flex items-center justify-center text-[9px] text-blue-600">
+                                    <i class="fa-solid fa-road"></i>
+                                </span>
+                                <p class="text-xs text-slate-600" id="track-traffic-status">Normal traffic load along secondary corridors.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="glass p-5 rounded-2xl border-l-4 border-l-blue-600">
+                    <h3 class="header-title text-sm font-black text-blue-700 uppercase tracking-wider mb-3">
+                        <i class="fa-solid fa-hand-holding-hand text-base mr-1.5 animate-pulse"></i>
+                        <span>Immediate Actions Till Arrival</span>
+                    </h3>
+                    
+                    <div id="guidance-content" class="space-y-4 text-xs text-slate-600 leading-relaxed">
+                        <p>Fill out the dispatcher report first to receive specific medical instruction arrays tailored to your current scenario.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- PARAMEDIC IN-TRANSIT TABLET -->
+        <section id="view-nurse" class="view-panel hidden h-full overflow-y-auto md:overflow-hidden p-6 flex flex-col md:flex-row gap-6">
+            <div class="w-full md:w-[40%] flex flex-col gap-4 md:h-full md:overflow-y-auto custom-scrollbar pb-24 md:pb-4">
+                <div class="glass p-5 rounded-2xl relative overflow-hidden">
+                    <div class="absolute -top-10 -right-10 w-24 h-24 bg-blue-500/10 rounded-full blur-xl"></div>
+                    
+                    <h2 class="header-title text-lg font-bold text-slate-900 mb-4 flex items-center space-x-2">
+                        <i class="fa-solid fa-user-nurse text-blue-600 animate-pulse"></i>
+                        <span>Active Patient Profile</span>
+                    </h2>
+
+                    <div id="nurse-waiting-placeholder" class="text-center py-12">
+                        <i class="fa-solid fa-hospital-user text-3xl text-slate-400 mb-3 block"></i>
+                        <p class="text-xs text-slate-500">No active dispatch patient profile selected. Trigger an emergency dispatch from the Patient Portal first.</p>
+                    </div>
+
+                    <div id="nurse-patient-details" class="hidden space-y-4">
+                        <div class="p-3 bg-slate-50 border border-slate-100 rounded-xl">
+                            <span class="block text-[10px] text-slate-500 uppercase tracking-widest font-semibold">Patient Name</span>
+                            <span class="block text-sm font-bold text-slate-900 mt-0.5" id="nurse-detail-name"></span>
+                        </div>
+
+                        <div class="grid grid-cols-2 gap-3">
+                            <div class="p-3 bg-slate-50 border border-slate-100 rounded-xl">
+                                <span class="block text-[10px] text-slate-500 uppercase tracking-widest font-semibold">Age / Blood Group</span>
+                                <span class="block text-sm font-bold text-slate-900 mt-0.5" id="nurse-detail-age"></span>
+                            </div>
+                            <div class="p-3 bg-slate-50 border border-slate-100 rounded-xl">
+                                <span class="block text-[10px] text-slate-500 uppercase tracking-widest font-semibold">Location / Address</span>
+                                <span class="block text-sm font-bold text-slate-900 mt-0.5" id="nurse-detail-loc"></span>
+                            </div>
+                        </div>
+
+                        <div class="p-3 bg-slate-50 border border-slate-100 rounded-xl">
+                            <span class="block text-[10px] text-slate-500 uppercase tracking-widest font-semibold">Reported Symptoms / Analysis</span>
+                            <span class="block text-xs text-slate-600 mt-1" id="nurse-detail-symptoms"></span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="glass p-5 rounded-2xl relative overflow-hidden" id="nurse-vitals-container">
+                    <h3 class="header-title text-sm font-black text-slate-900 uppercase tracking-wider mb-4 flex items-center justify-between">
+                        <span>Vitals Streams Telemetry</span>
+                        <span class="w-2.5 h-2.5 rounded-full bg-blue-600 animate-pulse"></span>
+                    </h3>
+
+                    <div class="grid grid-cols-2 gap-4">
+                        <div class="p-3 rounded-xl bg-slate-50 border border-slate-100">
+                            <label class="block text-[10px] text-slate-500 uppercase tracking-widest font-semibold mb-1">OXYGEN LEVEL (% SpO2)</label>
+                            <div class="flex items-center justify-between">
+                                <span class="text-xl font-bold text-blue-600 font-mono" id="val-o2">94%</span>
+                                <input type="range" id="slider-o2" min="70" max="100" value="94" oninput="updateParamedicVital('o2', this.value)" class="w-16 h-1 bg-slate-200 accent-blue-600 rounded-lg cursor-pointer">
+                            </div>
+                        </div>
+
+                        <div class="p-3 rounded-xl bg-slate-50 border border-slate-100">
+                            <label class="block text-[10px] text-slate-500 uppercase tracking-widest font-semibold mb-1">BLOOD PRESSURE</label>
+                            <div class="flex items-center justify-between">
+                                <span class="text-base font-bold text-teal-600 font-mono" id="val-bp">145/95</span>
+                                <select id="select-bp" onchange="updateParamedicVital('bp', this.value)" class="bg-white text-[10px] border border-slate-200 text-slate-700 rounded px-1 py-0.5 outline-none">
+                                    <option value="120/80">120/80 Normal</option>
+                                    <option value="145/95" selected>145/95 High</option>
+                                    <option value="175/110">175/110 Crisis</option>
+                                    <option value="85/55">85/55 Low</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="p-3 rounded-xl bg-slate-50 border border-slate-100">
+                            <label class="block text-[10px] text-slate-500 uppercase tracking-widest font-semibold mb-1">PULSE RATE (BPM)</label>
+                            <div class="flex items-center justify-between">
+                                <span class="text-xl font-bold text-amber-600 font-mono" id="val-pulse">98</span>
+                                <input type="range" id="slider-pulse" min="40" max="180" value="98" oninput="updateParamedicVital('pulse', this.value)" class="w-16 h-1 bg-slate-200 accent-amber-600 rounded-lg cursor-pointer">
+                            </div>
+                        </div>
+
+                        <div class="p-3 rounded-xl bg-slate-50 border border-slate-100">
+                            <label class="block text-[10px] text-slate-500 uppercase tracking-widest font-semibold mb-1">HEART RATE (BPM)</label>
+                            <div class="flex items-center justify-between">
+                                <span class="text-xl font-bold text-red-600 font-mono" id="val-hr">98</span>
+                                <input type="range" id="slider-hr" min="40" max="180" value="98" oninput="updateParamedicVital('hr', this.value)" class="w-16 h-1 bg-slate-200 accent-red-600 rounded-lg cursor-pointer">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="flex-1 flex flex-col gap-4 md:h-full md:overflow-hidden pb-12 md:pb-4">
+                <div class="glass p-6 rounded-2xl flex-1 flex flex-col justify-between overflow-y-auto custom-scrollbar">
+                    <div>
+                        <h2 class="header-title text-xl font-bold text-slate-900 mb-2 flex items-center space-x-2">
+                            <i class="fa-solid fa-notes-medical text-blue-600"></i>
+                            <span>Clinical Requirements Dispatch</span>
+                        </h2>
+                        <p class="text-xs text-slate-500 mb-6">Select resources that the designated Hospital ER Bay must prepare and secure prior to ambulance arrival.</p>
+
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                            <label class="flex items-start space-x-3 p-4 rounded-xl border border-slate-100 bg-slate-50/40 hover:border-blue-300 cursor-pointer transition-all">
+                                <input type="checkbox" id="chk-icu" onchange="updateNurseRequirement('icu', this.checked)" class="mt-1 w-4 h-4 rounded accent-blue-600 bg-white border-slate-300">
+                                <div>
+                                    <span class="block text-sm font-bold text-slate-900">ICU Bed Reservation</span>
+                                    <span class="block text-[10px] text-slate-500">Lock high-care telemetry unit bed in intensive ward.</span>
+                                </div>
+                            </label>
+
+                            <label class="flex items-start space-x-3 p-4 rounded-xl border border-slate-100 bg-slate-50/40 hover:border-blue-300 cursor-pointer transition-all">
+                                <input type="checkbox" id="chk-blood" onchange="updateNurseRequirement('blood', this.checked)" class="mt-1 w-4 h-4 rounded accent-blue-600 bg-white border-slate-300">
+                                <div>
+                                    <span class="block text-sm font-bold text-slate-900">Specific Blood Matched</span>
+                                    <span class="block text-[10px] text-slate-500">Request matched units loaded from central blood bank.</span>
+                                </div>
+                            </label>
+
+                            <label class="flex items-start space-x-3 p-4 rounded-xl border border-slate-100 bg-slate-50/40 hover:border-blue-300 cursor-pointer transition-all">
+                                <input type="checkbox" id="chk-oxygen" onchange="updateNurseRequirement('oxygen', this.checked)" class="mt-1 w-4 h-4 rounded accent-blue-600 bg-white border-slate-300">
+                                <div>
+                                    <span class="block text-sm font-bold text-slate-900">Ventilator / Oxygen Line</span>
+                                    <span class="block text-[10px] text-slate-500">Prime trauma wall-mount high-flow pure oxygen rigs.</span>
+                                </div>
+                            </label>
+
+                            <label class="flex items-start space-x-3 p-4 rounded-xl border border-slate-100 bg-slate-50/40 hover:border-blue-300 cursor-pointer transition-all">
+                                <input type="checkbox" id="chk-ventilator" onchange="updateNurseRequirement('ventilator', this.checked)" class="mt-1 w-4 h-4 rounded accent-blue-600 bg-white border-slate-300">
+                                <div>
+                                    <span class="block text-sm font-bold text-slate-900">Portable Ventilator Standby</span>
+                                    <span class="block text-[10px] text-slate-500">Position calibrated life-support ventilator in bays.</span>
+                                </div>
+                            </label>
+
+                            <label class="flex items-start space-x-3 p-4 rounded-xl border border-slate-100 bg-slate-50/40 hover:border-blue-300 cursor-pointer transition-all text-left">
+                                <input type="checkbox" id="chk-doc" onchange="updateNurseRequirement('doc', this.checked)" class="mt-1 w-4 h-4 rounded accent-blue-600 bg-white border-slate-300">
+                                <div>
+                                    <span class="block text-sm font-bold text-slate-900">Specialist Surgeon On-Call</span>
+                                    <span class="block text-[10px] text-slate-500">Emergency page cardiologist, neurosurgeon, or trauma doctor.</span>
+                                </div>
+                            </label>
+                        </div>
+                    </div>
+
+                    <div class="border-t border-blue-100 pt-4 mt-6 flex flex-col sm:flex-row items-center justify-between gap-4">
+                        <div class="flex items-center space-x-2">
+                            <span class="w-2 h-2 rounded-full bg-emerald-500 animate-ping"></span>
+                            <span class="text-xs text-slate-500">Status: Connection to ER database secure</span>
+                        </div>
+                        <button onclick="sendParamedicUpdateToHospital()" class="w-full sm:w-auto px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white font-bold text-sm rounded-xl uppercase tracking-wider transition-all shadow-md">
+                            Notify Hospital Command
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- HOSPITAL COMMAND CENTER -->
+        <section id="view-hospital" class="view-panel hidden h-full overflow-y-auto md:overflow-hidden p-6 flex flex-col xl:flex-row gap-6">
+            <div class="flex-1 flex flex-col gap-4 md:h-full md:overflow-hidden pb-12 md:pb-4">
+                <div class="glass p-5 rounded-2xl flex-1 flex flex-col overflow-hidden">
+                    <h2 class="header-title text-lg font-bold text-slate-900 mb-4 flex items-center justify-between">
+                        <span class="flex items-center space-x-2">
+                            <i class="fa-solid fa-bell text-red-500 animate-bounce"></i>
+                            <span>Incoming Emergency Telemetry Stream</span>
+                        </span>
+                        <span id="hospital-badge-status" class="bg-red-50 border border-red-200 text-red-600 text-xs px-2.5 py-1 rounded-full font-bold">AWAITING CRITICAL INCIDENT DATA</span>
+                    </h2>
+
+                    <div id="hospital-waiting-placeholder" class="text-center py-16 my-auto">
+                        <i class="fa-solid fa-hospital text-4xl text-slate-400 mb-3 block"></i>
+                        <p class="text-xs text-slate-400">Hospital command radar quiet. No active telemetry pipelines loaded.</p>
+                    </div>
+
+                    <div id="hospital-live-feed" class="hidden flex-1 flex flex-col justify-between overflow-y-auto custom-scrollbar">
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                            <div class="p-4 rounded-xl bg-white border border-blue-100 flex items-center justify-between shadow-sm">
+                                <div>
+                                    <span class="block text-[10px] text-slate-500 uppercase tracking-widest font-semibold">In-Transit Patient</span>
+                                    <span class="block text-base font-bold text-slate-900 mt-1" id="hosp-field-name"></span>
+                                </div>
+                                <span class="bg-blue-50 text-blue-600 text-xs px-2.5 py-1 rounded-full font-mono font-semibold" id="hosp-field-age"></span>
+                            </div>
+
+                            <div class="p-4 rounded-xl bg-white border border-blue-100 flex items-center justify-between shadow-sm">
+                                <div>
+                                    <span class="block text-[10px] text-slate-500 uppercase tracking-widest font-semibold">Incident ETA Timeline</span>
+                                    <span class="block text-base font-bold text-red-600 mt-1" id="hosp-field-eta"></span>
+                                </div>
+                                <span class="bg-slate-100 text-slate-600 text-xs px-2.5 py-1 rounded-full" id="hosp-field-severity"></span>
+                            </div>
+                        </div>
+
+                        <div class="p-4 rounded-xl bg-white border border-blue-100 mb-4 shadow-sm">
+                            <span class="block text-[10px] text-slate-500 uppercase tracking-widest font-semibold mb-2">Primary Vitals Telemetry Arrays</span>
+                            <div class="grid grid-cols-4 gap-4 text-center">
+                                <div class="p-2.5 rounded-lg border border-slate-100 bg-slate-50/40">
+                                    <span class="block text-[9px] text-slate-400 tracking-wider">O2 SAT</span>
+                                    <span class="text-lg font-bold text-blue-600" id="hosp-v-o2"></span>
+                                </div>
+                                <div class="p-2.5 rounded-lg border border-slate-100 bg-slate-50/40">
+                                    <span class="block text-[9px] text-slate-400 tracking-wider">PRESSURE</span>
+                                    <span class="text-lg font-bold text-teal-600" id="hosp-v-bp"></span>
+                                </div>
+                                <div class="p-2.5 rounded-lg border border-slate-100 bg-slate-50/40">
+                                    <span class="block text-[9px] text-slate-400 tracking-wider">PULSE</span>
+                                    <span class="text-lg font-bold text-amber-600" id="hosp-v-pulse"></span>
+                                </div>
+                                <div class="p-2.5 rounded-lg border border-slate-100 bg-slate-50/40">
+                                    <span class="block text-[9px] text-slate-400 tracking-wider">HEART</span>
+                                    <span class="text-lg font-bold text-red-600" id="hosp-v-hr"></span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="flex-1 flex flex-col justify-end">
+                            <span class="block text-[10px] text-slate-400 uppercase tracking-widest font-semibold mb-2">Interactive ER Incident Timeline</span>
+                            <div class="relative pl-6 space-y-3 border-l border-blue-100">
+                                <div class="relative">
+                                    <span class="absolute -left-[29px] top-1.5 w-3 h-3 rounded-full bg-emerald-500 border-2 border-white"></span>
+                                    <div class="text-xs">
+                                        <span class="text-slate-500 font-mono text-[10px] mr-2">00:00</span>
+                                        <span class="font-bold text-slate-900">Emergency Request Logged</span>
+                                        <p class="text-[10px] text-slate-500 mt-0.5">Automated AI dispatch completed. Route tracked live.</p>
+                                    </div>
+                                </div>
+
+                                <div class="relative">
+                                    <span class="absolute -left-[29px] top-1.5 w-3 h-3 rounded-full bg-slate-300 border-2 border-white" id="t-line-nurse-dot"></span>
+                                    <div class="text-xs">
+                                        <span class="text-slate-500 font-mono text-[10px] mr-2">02:15</span>
+                                        <span class="font-bold text-slate-600" id="t-line-nurse-text">In-Transit Paramedic Assessment Awaiting</span>
+                                        <p class="text-[10px] text-slate-500 mt-0.5" id="t-line-nurse-sub">Updates automatically when paramedics commit vitals logs.</p>
+                                    </div>
+                                </div>
+
+                                <div class="relative">
+                                    <span class="absolute -left-[29px] top-1.5 w-3 h-3 rounded-full bg-slate-300 border-2 border-white" id="t-line-hosp-dot"></span>
+                                    <div class="text-xs">
+                                        <span class="text-slate-400 font-mono text-[10px] mr-2">04:30</span>
+                                        <span class="font-bold text-slate-600" id="t-line-hosp-text">Clinical Preparations Commenced</span>
+                                        <p class="text-[10px] text-slate-500 mt-0.5" id="t-line-hosp-sub">Resources locking into priority standby states.</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="w-full xl:w-[40%] flex flex-col gap-4 md:h-full md:overflow-y-auto custom-scrollbar pb-24 md:pb-4">
+                <div class="glass p-5 rounded-2xl relative overflow-hidden">
+                    <h2 class="header-title text-base font-bold text-slate-900 mb-4 flex items-center space-x-2">
+                        <i class="fa-solid fa-hospital-user text-blue-600"></i>
+                        <span>Clinical Infrastructure Allocation</span>
+                    </h2>
+
+                    <div class="space-y-3">
+                        <div class="p-3 bg-white border border-blue-100 rounded-xl flex items-center justify-between transition-all shadow-sm" id="panel-prep-icu">
+                            <div class="flex items-center space-x-3">
+                                <div class="w-8 h-8 rounded-lg bg-blue-50 border border-blue-100 flex items-center justify-center text-blue-600" id="icon-prep-icu">
+                                    <i class="fa-solid fa-bed-pulse"></i>
+                                </div>
+                                <div>
+                                    <span class="block text-xs font-bold text-slate-900">ICU Room Reservation</span>
+                                    <span class="block text-[10px] text-slate-400" id="meta-prep-icu">Awaiting Request</span>
+                                </div>
+                            </div>
+                            <button onclick="toggleHospitalPrepState('icu')" class="px-3 py-1.5 bg-slate-50 border border-slate-200 hover:border-blue-500 text-slate-600 font-bold text-[10px] rounded-lg uppercase tracking-wider transition-all" id="btn-prep-icu">
+                                Ready
+                            </button>
+                        </div>
+
+                        <div class="p-3 bg-white border border-blue-100 rounded-xl flex items-center justify-between transition-all shadow-sm" id="panel-prep-blood">
+                            <div class="flex items-center space-x-3">
+                                <div class="w-8 h-8 rounded-lg bg-blue-50 border border-blue-100 flex items-center justify-center text-blue-600" id="icon-prep-blood">
+                                    <i class="fa-solid fa-droplet"></i>
+                                </div>
+                                <div>
+                                    <span class="block text-xs font-bold text-slate-900">Specific Blood Inventory Ready</span>
+                                    <span class="block text-[10px] text-slate-400" id="meta-prep-blood">Awaiting Request</span>
+                                </div>
+                            </div>
+                            <button onclick="toggleHospitalPrepState('blood')" class="px-3 py-1.5 bg-slate-50 border border-slate-200 hover:border-blue-500 text-slate-600 font-bold text-[10px] rounded-lg uppercase tracking-wider transition-all" id="btn-prep-blood">
+                                Ready
+                            </button>
+                        </div>
+
+                        <div class="p-3 bg-white border border-blue-100 rounded-xl flex items-center justify-between transition-all shadow-sm" id="panel-prep-oxygen">
+                            <div class="flex items-center space-x-3">
+                                <div class="w-8 h-8 rounded-lg bg-blue-50 border border-blue-100 flex items-center justify-center text-blue-600" id="icon-prep-oxygen">
+                                    <i class="fa-solid fa-bottle-water"></i>
+                                </div>
+                                <div>
+                                    <span class="block text-xs font-bold text-slate-900">High-Flow Oxygen Lines</span>
+                                    <span class="block text-[10px] text-slate-400" id="meta-prep-oxygen">Awaiting Request</span>
+                                </div>
+                            </div>
+                            <button onclick="toggleHospitalPrepState('oxygen')" class="px-3 py-1.5 bg-slate-50 border border-slate-200 hover:border-blue-500 text-slate-600 font-bold text-[10px] rounded-lg uppercase tracking-wider transition-all" id="btn-prep-oxygen">
+                                Ready
+                            </button>
+                        </div>
+
+                        <div class="p-3 bg-white border border-blue-100 rounded-xl flex items-center justify-between transition-all shadow-sm" id="panel-prep-ventilator">
+                            <div class="flex items-center space-x-3">
+                                <div class="w-8 h-8 rounded-lg bg-blue-50 border border-blue-100 flex items-center justify-center text-blue-600" id="icon-prep-ventilator">
+                                    <i class="fa-solid fa-fan"></i>
+                                </div>
+                                <div>
+                                    <span class="block text-xs font-bold text-slate-900">Portable Ventilator Unit Ready</span>
+                                    <span class="block text-[10px] text-slate-400" id="meta-prep-ventilator">Awaiting Request</span>
+                                </div>
+                            </div>
+                            <button onclick="toggleHospitalPrepState('ventilator')" class="px-3 py-1.5 bg-slate-50 border border-slate-200 hover:border-blue-500 text-slate-600 font-bold text-[10px] rounded-lg uppercase tracking-wider transition-all" id="btn-prep-ventilator">
+                                Ready
+                            </button>
+                        </div>
+
+                        <div class="p-3 bg-white border border-blue-100 rounded-xl flex items-center justify-between transition-all shadow-sm" id="panel-prep-doc">
+                            <div class="flex items-center space-x-3">
+                                <div class="w-8 h-8 rounded-lg bg-blue-50 border border-blue-100 flex items-center justify-center text-blue-600" id="icon-prep-doc">
+                                    <i class="fa-solid fa-user-doctor"></i>
+                                </div>
+                                <div>
+                                    <span class="block text-xs font-bold text-slate-900">Specialist Surgeon On-Call</span>
+                                    <span class="block text-[10px] text-slate-400" id="meta-prep-doc">Awaiting Request</span>
+                                </div>
+                            </div>
+                            <button onclick="toggleHospitalPrepState('doc')" class="px-3 py-1.5 bg-slate-50 border border-slate-200 hover:border-blue-500 text-slate-600 font-bold text-[10px] rounded-lg uppercase tracking-wider transition-all" id="btn-prep-doc">
+                                Ready
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- LIVE WORKFLOW SIMULATOR SPLIT-SCREEN -->
+        <section id="view-simulator" class="view-panel hidden h-full overflow-y-auto lg:overflow-hidden p-6 flex flex-col">
+            <div class="flex items-center justify-between border-b border-blue-100 pb-3 mb-4">
+                <div>
+                    <h2 class="header-title text-xl font-bold text-slate-900 flex items-center space-x-2">
+                        <i class="fa-solid fa-chalkboard-user text-blue-600"></i>
+                        <span>RESQ Unified Multilateral Live Simulation Grid</span>
+                    </h2>
+                    <p class="text-[10px] text-slate-500">Perfect for presentation judges to watch realtime interactive workflows inside a single physical screen.</p>
+                </div>
+                <div class="flex items-center space-x-2">
+                    <button onclick="resetUnifiedDemo()" class="px-4 py-2 bg-white hover:bg-slate-50 border border-blue-100 text-xs font-semibold rounded-xl text-slate-700 transition-all flex items-center space-x-2 shadow-sm">
+                        <i class="fa-solid fa-rotate-left"></i>
+                        <span>Reset Simulation State</span>
+                    </button>
+                </div>
+            </div>
+
+            <div class="flex-1 grid grid-cols-1 lg:grid-cols-3 gap-4 overflow-y-auto lg:overflow-hidden min-h-0 pb-24 lg:pb-0">
+                <div class="glass rounded-2xl flex flex-col overflow-hidden min-h-0" id="sim-portal-patient">
+                    <div class="bg-blue-50/50 px-4 py-2.5 border-b border-blue-100 flex items-center justify-between shrink-0">
+                        <span class="text-xs font-bold tracking-wider uppercase text-blue-700 flex items-center space-x-1.5">
+                            <i class="fa-solid fa-hospital-user"></i>
+                            <span>1. Patient &amp; Route Hub</span>
+                        </span>
+                        <div class="w-2.5 h-2.5 rounded-full bg-blue-600 animate-pulse"></div>
+                    </div>
+                    <div class="flex-1 overflow-y-auto custom-scrollbar p-4 space-y-4 bg-white/50">
+                        <div id="sim-patient-view" class="h-full flex flex-col justify-between">
+                            <div id="sim-booking-form-wrap" class="space-y-4">
+                                <div class="grid grid-cols-2 gap-2">
+                                    <button onclick="loadSymptomPreset('heart_attack')" class="p-2.5 rounded-xl border border-blue-100 bg-white text-[10px] text-red-600 hover:border-red-400 transition-all font-bold shadow-sm">
+                                        <i class="fa-solid fa-heart-pulse"></i> Heart Attack
+                                    </button>
+                                    <button onclick="loadSymptomPreset('accident')" class="p-2.5 rounded-xl border border-blue-100 bg-white text-[10px] text-rose-600 hover:border-rose-400 transition-all font-bold shadow-sm">
+                                        <i class="fa-solid fa-car-burst"></i> Accident
+                                    </button>
+                                </div>
+                                <div class="space-y-2">
+                                    <input id="sim-form-name" placeholder="Patient Full Name" class="w-full bg-white border border-blue-100 focus:border-blue-500 rounded-lg px-3 py-1.5 text-xs text-slate-800 outline-none shadow-sm">
+                                    <div class="grid grid-cols-2 gap-2">
+                                        <input id="sim-form-age" type="number" placeholder="Age" class="w-full bg-white border border-blue-100 focus:border-blue-500 rounded-lg px-3 py-1.5 text-xs text-slate-800 outline-none shadow-sm">
+                                        <select id="sim-form-blood" class="w-full bg-white border border-blue-100 focus:border-blue-500 rounded-lg px-3 py-1.5 text-xs text-slate-800 outline-none shadow-sm">
+                                            <option value="">Blood Group</option>
+                                            <option value="A+">A+</option>
+                                            <option value="B+">B+</option>
+                                            <option value="O-">O-</option>
+                                        </select>
+                                    </div>
+                                    <textarea id="sim-form-symptoms" placeholder="Symptom analysis report" class="w-full bg-white border border-blue-100 focus:border-blue-500 rounded-lg px-3 py-1.5 text-xs text-slate-800 outline-none shadow-sm" rows="2"></textarea>
+                                </div>
+                                <button onclick="triggerSimulateDispatch()" class="w-full py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-bold text-xs uppercase tracking-wider transition-all shadow-sm">
+                                    Commit Emergency Request
+                                </button>
+                            </div>
+
+                            <div id="sim-booking-tracking" class="hidden h-full flex flex-col justify-between">
+                                <div class="space-y-3">
+                                    <div class="flex items-center justify-between">
+                                        <span class="text-[10px] text-red-600 font-bold bg-red-50 border border-red-200 px-2 py-0.5 rounded-full shadow-sm" id="sim-track-severity">HIGH</span>
+                                        <span class="text-[10px] text-slate-500 font-mono" id="sim-track-eta">06:00 MINS</span>
+                                    </div>
+                                    <div class="p-3 rounded-lg border border-blue-100 bg-white shadow-sm">
+                                        <span class="block text-[8px] text-slate-500 uppercase tracking-wider">Matched Hospital</span>
+                                        <span class="block text-xs font-bold text-slate-900 mt-0.5" id="sim-track-hosp">Apex Trauma Center</span>
+                                    </div>
+                                    <div class="p-3 rounded-lg border border-blue-100 bg-white shadow-sm">
+                                        <span class="block text-[8px] text-slate-500 uppercase tracking-wider">Unit Dispatched</span>
+                                        <span class="block text-xs font-bold text-slate-900 mt-0.5" id="sim-track-amb">ALS Ambulance Unit Alpha-04</span>
+                                    </div>
+                                    <div class="p-3 rounded-lg border border-blue-200 bg-blue-50/30 border-l-2 border-l-blue-600">
+                                        <span class="block text-[8px] text-blue-700 uppercase tracking-wider font-bold">Incident Action Plan</span>
+                                        <p class="text-[9px] text-slate-600 mt-1 leading-relaxed" id="sim-track-guidance">Perform CPR operations if breathing pauses. Elevate neck and keep air corridors empty.</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="glass rounded-2xl flex flex-col overflow-hidden min-h-0" id="sim-portal-nurse">
+                    <div class="bg-blue-50/50 px-4 py-2.5 border-b border-blue-100 flex items-center justify-between shrink-0">
+                        <span class="text-xs font-bold tracking-wider uppercase text-blue-700 flex items-center space-x-1.5">
+                            <i class="fa-solid fa-user-nurse"></i>
+                            <span>2. Paramedic Assessment</span>
+                        </span>
+                        <div class="w-2.5 h-2.5 rounded-full bg-blue-600 animate-pulse"></div>
+                    </div>
+                    <div class="flex-1 overflow-y-auto custom-scrollbar p-4 space-y-4 bg-white/50">
+                        <div id="sim-nurse-waiting" class="text-center py-12">
+                            <i class="fa-solid fa-tablet-screen-button text-2xl text-slate-400 mb-2 block"></i>
+                            <span class="text-xs text-slate-500">Waiting for active patient dispatch registry...</span>
+                        </div>
+
+                        <div id="sim-nurse-active" class="hidden space-y-4">
+                            <div class="p-3 rounded-lg border border-blue-100 bg-white shadow-sm">
+                                <span class="block text-[8px] text-slate-500 uppercase tracking-wider">Patient Records</span>
+                                <span class="block text-xs font-bold text-slate-900 mt-0.5" id="sim-nurse-name">Robert Miller</span>
+                            </div>
+
+                            <div class="grid grid-cols-2 gap-2">
+                                <div class="p-2 border border-blue-100 bg-white rounded-lg shadow-sm">
+                                    <span class="block text-[8px] text-slate-500 uppercase tracking-wider mb-1">OXYGEN (%)</span>
+                                    <div class="flex items-center justify-between">
+                                        <span class="text-sm font-mono font-bold text-blue-600" id="sim-nurse-o2">94%</span>
+                                        <input type="range" min="70" max="100" value="94" oninput="updateParamedicVital('o2', this.value)" class="w-12 h-1 accent-blue-600 cursor-pointer">
+                                    </div>
+                                </div>
+                                <div class="p-2 border border-blue-100 bg-white rounded-lg shadow-sm">
+                                    <span class="block text-[8px] text-slate-500 uppercase tracking-wider mb-1">HR (BPM)</span>
+                                    <div class="flex items-center justify-between">
+                                        <span class="text-sm font-mono font-bold text-red-600" id="sim-nurse-hr">98</span>
+                                        <input type="range" min="40" max="180" value="98" oninput="updateParamedicVital('hr', this.value)" class="w-12 h-1 accent-red-600 cursor-pointer">
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="space-y-1.5">
+                                <span class="block text-[8px] text-slate-500 uppercase tracking-wider font-bold">Clinical Prep Requisitions</span>
+                                <div class="grid grid-cols-1 gap-1">
+                                    <label class="flex items-center space-x-2 p-2 border border-blue-100 rounded-lg bg-white text-xs text-slate-700 shadow-sm cursor-pointer">
+                                        <input type="checkbox" id="sim-chk-icu" onchange="updateNurseRequirement('icu', this.checked)" class="accent-blue-600">
+                                        <span>ICU Bed Reservation</span>
+                                    </label>
+                                    <label class="flex items-center space-x-2 p-2 border border-blue-100 rounded-lg bg-white text-xs text-slate-700 shadow-sm cursor-pointer">
+                                        <input type="checkbox" id="sim-chk-blood" onchange="updateNurseRequirement('blood', this.checked)" class="accent-blue-600">
+                                        <span>Blood Inventory Match</span>
+                                    </label>
+                                    <label class="flex items-center space-x-2 p-2 border border-blue-100 rounded-lg bg-white text-xs text-slate-700 shadow-sm cursor-pointer">
+                                        <input type="checkbox" id="sim-chk-oxygen" onchange="updateNurseRequirement('oxygen', this.checked)" class="accent-cyan-600">
+                                        <span>Oxygen Lines Standby</span>
+                                    </label>
+                                </div>
+                            </div>
+
+                            <button onclick="sendParamedicUpdateToHospital()" class="w-full py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-xs font-bold uppercase tracking-wider transition-all shadow-sm">
+                                Commit &amp; Stream Vitals
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="glass rounded-2xl flex flex-col overflow-hidden min-h-0" id="sim-portal-hospital">
+                    <div class="bg-blue-50/50 px-4 py-2.5 border-b border-blue-100 flex items-center justify-between shrink-0">
+                        <span class="text-xs font-bold tracking-wider uppercase text-blue-700 flex items-center space-x-1.5">
+                            <i class="fa-solid fa-hospital-user"></i>
+                            <span>3. Hospital Command Center</span>
+                        </span>
+                        <div class="w-2.5 h-2.5 rounded-full bg-blue-600 animate-pulse"></div>
+                    </div>
+                    <div class="flex-1 overflow-y-auto custom-scrollbar p-4 space-y-4 bg-white/50">
+                        <div id="sim-hosp-waiting" class="text-center py-12">
+                            <i class="fa-solid fa-bell-slash text-2xl text-slate-400 mb-2 block"></i>
+                            <span class="text-xs text-slate-500">Command logs static. No active clinical alert streams.</span>
+                        </div>
+
+                        <div id="sim-hosp-active" class="hidden space-y-4">
+                            <div class="p-3 border border-red-200 bg-red-50/50 rounded-lg shadow-sm">
+                                <div class="flex justify-between items-center mb-1">
+                                    <span class="block text-[8px] text-red-600 font-bold uppercase">TRAUMA ALERT LEVEL HIGH</span>
+                                    <span class="text-[9px] text-slate-500 font-mono" id="sim-hosp-eta">ETA 06:00</span>
+                                </div>
+                                <span class="block text-xs font-bold text-slate-900" id="sim-hosp-summary">Robert Miller • Chest pain, cardiac concern</span>
+                            </div>
+
+                            <div class="grid grid-cols-3 gap-2 text-center">
+                                <div class="p-1.5 border border-blue-100 bg-white rounded shadow-sm">
+                                    <span class="block text-[7px] text-slate-500">O2 SAT</span>
+                                    <span class="text-xs font-bold text-blue-600" id="sim-hosp-v-o2">94%</span>
+                                </div>
+                                <div class="p-1.5 border border-blue-100 bg-white rounded shadow-sm">
+                                    <span class="block text-[7px] text-slate-500">PULSE</span>
+                                    <span class="text-xs font-bold text-amber-600" id="sim-hosp-v-pulse">98</span>
+                                </div>
+                                <div class="p-1.5 border border-blue-100 bg-white rounded shadow-sm">
+                                    <span class="block text-[7px] text-slate-500">HEART</span>
+                                    <span class="text-xs font-bold text-red-600" id="sim-hosp-v-hr">98</span>
+                                </div>
+                            </div>
+
+                            <div class="space-y-1.5">
+                                <span class="block text-[8px] text-slate-500 uppercase tracking-wider font-bold">Preparation &amp; Lock Panels</span>
+                                <div class="space-y-1">
+                                    <div class="p-2 rounded border border-blue-100 bg-white flex items-center justify-between text-xs text-slate-700 shadow-sm" id="sim-prep-line-icu">
+                                        <span>ICU Reservation Bed</span>
+                                        <button onclick="toggleHospitalPrepState('icu')" id="sim-btn-icu" class="px-2 py-0.5 bg-slate-100 text-[9px] rounded uppercase font-bold text-slate-500 hover:bg-slate-200">AWAIT</button>
+                                    </div>
+                                    <div class="p-2 rounded border border-blue-100 bg-white flex items-center justify-between text-xs text-slate-700 shadow-sm" id="sim-prep-line-blood">
+                                        <span>Matched Blood Units</span>
+                                        <button onclick="toggleHospitalPrepState('blood')" id="sim-btn-blood" class="px-2 py-0.5 bg-slate-100 text-[9px] rounded uppercase font-bold text-slate-500 hover:bg-slate-200">AWAIT</button>
+                                    </div>
+                                    <div class="p-2 rounded border border-blue-100 bg-white flex items-center justify-between text-xs text-slate-700 shadow-sm" id="sim-prep-line-oxygen">
+                                        <span>Oxygen Pipelines Standby</span>
+                                        <button onclick="toggleHospitalPrepState('oxygen')" id="sim-btn-oxygen" class="px-2 py-0.5 bg-slate-100 text-[9px] rounded uppercase font-bold text-slate-500 hover:bg-slate-200">AWAIT</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- SUCCESS OVERLAY (FINAL STATE SCREEN) -->
+    <div id="arrival-overlay" class="hidden fixed inset-0 z-50 bg-white/95 backdrop-blur-md flex flex-col items-center justify-center p-6 text-center">
+        <div class="max-w-xl w-full space-y-8">
+            <div class="relative w-32 h-32 mx-auto">
+                <div class="absolute inset-0 rounded-full border-2 border-emerald-500/20 animate-ping"></div>
+                <div class="absolute inset-4 rounded-full border-2 border-emerald-500 flex items-center justify-center bg-emerald-50 shadow-md">
+                    <i class="fa-solid fa-hospital-user text-emerald-500 text-4xl animate-pulse"></i>
+                </div>
+            </div>
+
+            <div class="space-y-3">
+                <span class="inline-flex items-center space-x-1.5 bg-emerald-50 border border-emerald-200 text-emerald-600 text-xs px-4 py-1.5 rounded-full font-bold uppercase tracking-widest shadow-sm">
+                    <i class="fa-solid fa-circle-check"></i>
+                    <span>TREATMENT INITIATED IN 0.00 SECONDS</span>
+                </span>
+                <h2 class="header-title text-3xl sm:text-5xl font-black text-slate-900 leading-none">
+                    AMBULANCE ADMITTED.
+                </h2>
+                <p class="text-sm sm:text-base text-slate-600 max-w-md mx-auto">
+                    The clinical infrastructure, matching blood units, wall-flow oxygen, and specialized trauma surgical assets stood in priority operational states prior to physical ambulance entry.
+                </p>
+            </div>
+
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 text-left">
+                <div class="p-4 rounded-xl border border-emerald-100 bg-emerald-50/50 shadow-sm">
+                    <span class="block text-[9px] text-slate-500 uppercase tracking-wider">Telemetry Action Time</span>
+                    <span class="block text-xl font-bold text-emerald-600 mt-1 font-mono">0.00 SEC DELAY</span>
+                </div>
+                <div class="p-4 rounded-xl border border-emerald-100 bg-emerald-50/50 shadow-sm">
+                    <span class="block text-[9px] text-slate-500 uppercase tracking-wider">Clinical Energy Saved</span>
+                    <span class="block text-xl font-bold text-emerald-600 mt-1 font-mono">180 SEC GAIN</span>
+                </div>
+                <div class="p-4 rounded-xl border border-emerald-100 bg-emerald-50/50 shadow-sm">
+                    <span class="block text-[9px] text-slate-500 uppercase tracking-wider">Patient Status</span>
+                    <span class="block text-xl font-bold text-emerald-600 mt-1 font-mono">STABILIZED</span>
+                </div>
+            </div>
+
+            <div class="pt-4">
+                <button onclick="dismissArrivalSuccessScreen()" class="px-8 py-3 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-sm rounded-xl uppercase tracking-wider transition-all shadow-md">
+                    Reset Command Cycle
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MAIN CONTROL & REALTIME INTEGRATION JAVASCRIPT -->
+    <script>
+        // GLOBAL STATE MANAGEMENT DECLARATION
+        let AppState = {
+            activeRequest: null,
+            nurseVitals: { o2: 94, bp: '145/95', pulse: 98, hr: 98 },
+            nurseReqs: { icu: false, blood: false, oxygen: false, ventilator: false, doc: false },
+            hospitalPrep: { icu: false, blood: false, oxygen: false, ventilator: false, doc: false },
+            isDemoMode: true,
+            isAudioMuted: false,
+            audioCtx: null,
+            currentTriageQuestionId: null
+        };
+
+        // GLOBAL VARIABLES FOR GPS MAP & REALTIME TRACKING
+        let trackingMap = null;
+        let ambulanceMarker = null;
+        let routeLine = null;
+        let simulationTimerId = null;
+        let mockSimCounter = 0;
+        let db = null;
+
+        const SUPABASE_URL = "https://irnefzwpqwdzaqegtulv.supabase.co"; 
+        const SUPABASE_ANON_KEY = "sb_publishable_9FpmFQfqc8XU0EBtlVIUHQ_JZKwrz8-"; 
+
+        const regionHospitals = {
+            "Behala": [
+                "Vidyasagar State General Hospital",
+                "Behala Balananda Brahmachari Hospital",
+                "Behala Shanti Sangha Hospital",
+                "James Long Hospital",
+                "BM Birla Heart Research Centre",
+                "Woodlands Multispeciality Hospital",
+                "Kothari Medical Centre",
+                "BP Poddar Hospital",
+                "South Suburban Hospital",
+                "Behala General Hospital"
+            ],
+            "Tollygunge": [
+                "M R Bangur Hospital",
+                "RSV Hospital",
+                "Netaji Subhash Chandra Bose Cancer Hospital",
+                "Moore Avenue Specialist Clinic",
+                "AMRI Hospital Dhakuria",
+                "Desun Hospital",
+                "Ruby General Hospital",
+                "Fortis Hospital Anandapur",
+                "Peerless Hospital",
+                "Tollygunge Sambhunath Pandit Hospital"
+            ],
+            "New Town": [
+                "Tata Medical Center",
+                "Bhagirathi Neotia Woman & Child Care Centre",
+                "Ohio Hospital & Cardiology Research Centre",
+                "Belle Vue Clinic New Town",
+                "Glocal Hospital",
+                "Newtown General Hospital",
+                "Apollo Clinic New Town",
+                "HCG EKO Cancer Centre",
+                "Spandan Hospital",
+                "Charnock Hospital"
+            ],
+            "Ballygunge": [
+                "AMRI Hospital Dhakuria",
+                "Fortis Medical Centre Ballygunge",
+                "Woodlands Hospital",
+                "Belle Vue Clinic Loudon St",
+                "SSKM Hospital",
+                "Calcutta Medical Research Institute (CMRI)",
+                "Peerless Diagnostic Ballygunge",
+                "Mercy Hospital",
+                "Jagannath Gupta General Hospital",
+                "Ballygunge Maternity Home"
+            ],
+            "Salt Lake": [
+                "AMRI Hospitals Salt Lake",
+                "Manipal Hospital Broadway",
+                "Apollo Multispeciality Hospitals",
+                "Calcutta Heart Clinic & Hospital",
+                "Salt Lake Sub-Divisional Hospital",
+                "Anandalok Hospital",
+                "ILS Hospitals Salt Lake",
+                "Techno India Dama Healthcare",
+                "GD Hospital Salt Lake",
+                "Seva Hospital"
+            ]
+        };
+
+        const regionCoordinates = {
+            "Behala": [22.4988, 88.3149],
+            "Tollygunge": [22.4930, 88.3473],
+            "New Town": [22.5726, 88.4635],
+            "Ballygunge": [22.5278, 88.3656],
+            "Salt Lake": [22.5804, 88.4110]
+        };
+
+        const triageQuestions = {
+            heart_attack: {
+                question: "Is the patient experiencing acute pressure radiating down the left arm or jaw?",
+                yesText: " radiates left arm/jaw pain",
+                noText: " no arm/jaw radiating pain"
+            },
+            accident: {
+                question: "Is there active spurting bleeding or deep open compound bone fractures visible?",
+                yesText: " compound bone fracture, active spurting bleeding",
+                noText: " bleeding is slow/controlled, closed trauma"
+            },
+            stroke: {
+                question: "Are facial features asymmetrical when smiling or is speech completely garbled?",
+                yesText: " acute speech garbling, asymmetrical facial droop",
+                noText: " clear speech patterns, motor weakness only"
+            },
+            breathing: {
+                question: "Is the patient breathing with deep under-rib wheezes or showing blue-tinted lips?",
+                yesText: " severe respiratory stridor, visible lips cyanosis",
+                noText: " mild/moderate dyspnea, lips nominal pink"
+            },
+            pregnancy: {
+                question: "Are active contraction intervals measuring under 60 seconds with fluid discharge?",
+                yesText: " contraction gap <60s, amniotic discharge active",
+                noText: " contraction gap >3 mins, delivery pre-stage"
+            },
+            fever: {
+                question: "Is the body temperature measuring above 104°F accompanied by acute delirium?",
+                yesText: " fever is 104.2°F, patient showing state confusion",
+                noText: " fever is 101.5°F, patient fully coherent"
+            }
+        };
+
+        const symptomPresets = {
+            heart_attack: {
+                symptoms: "Sudden onset crushing chest pain, dyspnea, heavy chest pressure.",
+                region: "Behala",
+                street: "14 James Long Sarani",
+                colorClass: "border-red-500 bg-red-50/80 text-red-700 shadow-md ring-2 ring-red-500/25"
+            },
+            accident: {
+                symptoms: "Polytrauma from bike crash. Deep arterial laceration on right leg.",
+                region: "New Town",
+                street: "Major Arterial Road, Near Eco Park Crossing",
+                colorClass: "border-rose-500 bg-rose-50/80 text-rose-700 shadow-md ring-2 ring-rose-500/25"
+            },
+            stroke: {
+                symptoms: "Acute face slurring and left side droop, sudden loss of bodily coordination.",
+                region: "Ballygunge",
+                street: "Broad Street, near Ballygunge Phari",
+                colorClass: "border-amber-500 bg-amber-50/80 text-amber-700 shadow-md ring-2 ring-amber-500/25"
+            },
+            breathing: {
+                symptoms: "Extreme shortness of breath, asthma flareup, wheezing sound.",
+                region: "Salt Lake",
+                street: "Sector V, Block GP, near College More",
+                colorClass: "border-blue-500 bg-blue-50/80 text-blue-700 shadow-md ring-2 ring-blue-500/25"
+            },
+            pregnancy: {
+                symptoms: "Advanced third-trimester active contractions, water broke.",
+                region: "Tollygunge",
+                street: "Moore Avenue, near Tollygunge Metro",
+                colorClass: "border-purple-500 bg-purple-50/80 text-purple-700 shadow-md ring-2 ring-purple-500/25"
+            },
+            fever: {
+                symptoms: "Uncontrollable high-grade fever spike measuring 103F, acute shivering.",
+                region: "Behala",
+                street: "Parnasree Pally",
+                colorClass: "border-teal-500 bg-teal-50/80 text-teal-700 shadow-md ring-2 ring-teal-500/25"
+            }
+        };
+
+        const randomGPSPlaces = [
+            { street: "14 James Long Sarani, Behala Chowrasta", region: "Behala" },
+            { street: "Sector V, Block GP, Salt Lake", region: "Salt Lake" },
+            { street: "Major Arterial Road, near Eco Park, New Town", region: "New Town" },
+            { street: "Broad Street, near Ballygunge Phari", region: "Ballygunge" },
+            { street: "Moore Avenue, near Tollygunge Metro Station", region: "Tollygunge" }
+        ];
+
+        window.onload = function() {
+            initAppNavigation();
+            initInternalSupabase();
+            initAudio();
+        };
+
+        function switchView(viewId) {
+            document.querySelectorAll('.view-panel').forEach(panel => {
+                panel.classList.add('hidden');
+                panel.classList.remove('active-panel');
+            });
+            const activePanel = document.getElementById(`view-${viewId}`);
+            if (activePanel) {
+                activePanel.classList.remove('hidden');
+                activePanel.classList.add('active-panel');
+            }
+
+            document.querySelectorAll('.nav-btn').forEach(btn => {
+                btn.classList.remove('bg-blue-600', 'text-white', 'shadow-md', 'scale-105', 'font-black');
+                if (btn.getAttribute('data-target') === viewId) {
+                    btn.classList.add('bg-blue-600', 'text-white', 'shadow-md', 'scale-105', 'font-black');
+                }
+            });
+
+            // If navigating to the tracking map, trigger container resize and map drawing with a robust delay
+            if (viewId === 'tracking' || viewId === 'simulator') {
+                setTimeout(() => {
+                    initOrRefreshMap();
+                }, 200);
+            }
+            playSciFiSound('click');
+        }
+
+        function initAppNavigation() {
+            switchView('user');
+        }
+
+        function initAudio() {
+            try {
+                const AudioContext = window.AudioContext || window.webkitAudioContext;
+                if (AudioContext) {
+                    AppState.audioCtx = new AudioContext();
+                }
+            } catch (e) {}
+        }
+
+        function playSciFiSound(type) {
+            if (AppState.isAudioMuted || !AppState.audioCtx) return;
+            try {
+                if (AppState.audioCtx.state === 'suspended') {
+                    AppState.audioCtx.resume();
+                }
+                const osc = AppState.audioCtx.createOscillator();
+                const gain = AppState.audioCtx.createGain();
+                osc.connect(gain);
+                gain.connect(AppState.audioCtx.destination);
+
+                if (type === 'click') {
+                    osc.type = 'sine';
+                    osc.frequency.setValueAtTime(800, AppState.audioCtx.currentTime);
+                    osc.frequency.exponentialRampToValueAtTime(150, AppState.audioCtx.currentTime + 0.15);
+                    gain.gain.setValueAtTime(0.08, AppState.audioCtx.currentTime);
+                    gain.gain.exponentialRampToValueAtTime(0.01, AppState.audioCtx.currentTime + 0.15);
+                    osc.start();
+                    osc.stop(AppState.audioCtx.currentTime + 0.15);
+                } else if (type === 'alert') {
+                    osc.type = 'sawtooth';
+                    osc.frequency.setValueAtTime(440, AppState.audioCtx.currentTime);
+                    osc.frequency.setValueAtTime(554, AppState.audioCtx.currentTime + 0.15);
+                    osc.frequency.setValueAtTime(659, AppState.audioCtx.currentTime + 0.3);
+                    gain.gain.setValueAtTime(0.12, AppState.audioCtx.currentTime);
+                    gain.gain.exponentialRampToValueAtTime(0.01, AppState.audioCtx.currentTime + 0.55);
+                    osc.start();
+                    osc.stop(AppState.audioCtx.currentTime + 0.55);
+                } else if (type === 'success') {
+                    osc.type = 'sine';
+                    osc.frequency.setValueAtTime(523.25, AppState.audioCtx.currentTime);
+                    osc.frequency.setValueAtTime(659.25, AppState.audioCtx.currentTime + 0.15);
+                    osc.frequency.setValueAtTime(783.99, AppState.audioCtx.currentTime + 0.3);
+                    osc.frequency.setValueAtTime(1046.50, AppState.audioCtx.currentTime + 0.45);
+                    gain.gain.setValueAtTime(0.1, AppState.audioCtx.currentTime);
+                    gain.gain.exponentialRampToValueAtTime(0.01, AppState.audioCtx.currentTime + 0.75);
+                    osc.start();
+                    osc.stop(AppState.audioCtx.currentTime + 0.75);
+                }
+            } catch (e) {}
+        }
+
+        function toggleAudioMute() {
+            AppState.isAudioMuted = !AppState.isAudioMuted;
+            const btn = document.getElementById('audio-toggle-btn');
+            if (AppState.isAudioMuted) {
+                btn.innerHTML = '<i class="fa-solid fa-volume-xmark text-slate-400 text-sm"></i>';
+            } else {
+                btn.innerHTML = '<i class="fa-solid fa-volume-high text-slate-500 text-sm"></i>';
+                playSciFiSound('click');
+            }
+        }
+
+        function onRegionChange() {
+            const regionSelect = document.getElementById('user-patient-region');
+            const hospitalSelect = document.getElementById('user-patient-hospital-pref');
+            const selectedRegion = regionSelect.value;
+
+            hospitalSelect.innerHTML = '<option value="AUTO">No Preference (Auto-Suggest)</option>';
+
+            if (selectedRegion && regionHospitals[selectedRegion]) {
+                regionHospitals[selectedRegion].forEach(hosp => {
+                    const opt = document.createElement('option');
+                    opt.value = hosp;
+                    opt.innerText = hosp;
+                    hospitalSelect.appendChild(opt);
+                });
+            }
+            playSciFiSound('click');
+        }
+
+        function highlightPresetSelection(presetKey) {
+            Object.keys(symptomPresets).forEach(key => {
+                const btn = document.getElementById(`preset-btn-${key}`);
+                if (btn) {
+                    btn.className = "p-3 rounded-xl border border-slate-100 bg-white hover:border-blue-300 text-left transition-all group shadow-sm";
+                }
+            });
+
+            const activeBtn = document.getElementById(`preset-btn-${presetKey}`);
+            const presetData = symptomPresets[presetKey];
+            if (activeBtn && presetData) {
+                activeBtn.className = `p-3 rounded-xl border ${presetData.colorClass} text-left transition-all group`;
+            }
+        }
+
+        function loadSymptomPreset(presetKey) {
+            const data = symptomPresets[presetKey];
+            if (!data) return;
+
+            document.getElementById('user-patient-symptoms').value = data.symptoms;
+            document.getElementById('user-patient-region').value = data.region;
+            
+            onRegionChange();
+            
+            document.getElementById('user-patient-address').value = data.street;
+            document.getElementById('sim-form-symptoms').value = data.symptoms;
+
+            highlightPresetSelection(presetKey);
+
+            // Populate the Conversational Triage box
+            const triageData = triageQuestions[presetKey];
+            const triageCard = document.getElementById('ai-triage-card');
+            const triageQuestionEl = document.getElementById('ai-triage-question');
+
+            if (triageData && triageCard && triageQuestionEl) {
+                triageQuestionEl.innerText = triageData.question;
+                triageCard.classList.remove('hidden');
+                AppState.currentTriageQuestionId = presetKey;
+            }
+
+            playSciFiSound('click');
+        }
+
+        function answerTriage(isYes) {
+            const presetKey = AppState.currentTriageQuestionId;
+            const triageData = triageQuestions[presetKey];
+            if (!triageData) return;
+
+            const targetInput = document.getElementById('user-patient-symptoms');
+            const phrase = isYes ? triageData.yesText : triageData.noText;
+            
+            if (!targetInput.value.includes(phrase)) {
+                targetInput.value = targetInput.value.trim() + " (" + phrase.trim() + ").";
+            }
+
+            // Hide the triage helper once answered
+            const triageCard = document.getElementById('ai-triage-card');
+            if (triageCard) triageCard.classList.add('hidden');
+            playSciFiSound('success');
+        }
+
+        function detectRegionFromAddress(addressText) {
+            if (!addressText) return;
+            const searchStr = addressText.toLowerCase();
+            const selectEl = document.getElementById('user-patient-region');
+
+            let matchedRegion = "";
+            if (searchStr.includes("behala")) matchedRegion = "Behala";
+            else if (searchStr.includes("tollygunge") || searchStr.includes("tollygunj")) matchedRegion = "Tollygunge";
+            else if (searchStr.includes("new town") || searchStr.includes("newtown")) matchedRegion = "New Town";
+            else if (searchStr.includes("ballygunge") || searchStr.includes("ballygunj")) matchedRegion = "Ballygunge";
+            else if (searchStr.includes("salt lake") || searchStr.includes("saltlake")) matchedRegion = "Salt Lake";
+
+            if (matchedRegion && selectEl.value !== matchedRegion) {
+                selectEl.value = matchedRegion;
+                onRegionChange();
+            }
+        }
+
+        function useCurrentGPS() {
+            // Get random realistic Kolkata location and auto detect region
+            const locationItem = randomGPSPlaces[Math.floor(Math.random() * randomGPSPlaces.length)];
+            const addressInput = document.getElementById('user-patient-address');
+            const selectEl = document.getElementById('user-patient-region');
+
+            if (addressInput && selectEl) {
+                addressInput.value = locationItem.street;
+                selectEl.value = locationItem.region;
+                onRegionChange();
+                playSciFiSound('success');
+            }
+        }
+
+        function handleEmergencySubmit(event) {
+            event.preventDefault();
+            
+            const name = document.getElementById('user-patient-name').value;
+            const age = document.getElementById('user-patient-age').value;
+            const blood = document.getElementById('user-patient-blood').value;
+            const symptoms = document.getElementById('user-patient-symptoms').value;
+            const region = document.getElementById('user-patient-region').value;
+            const address = document.getElementById('user-patient-address').value;
+            const prefHosp = document.getElementById('user-patient-hospital-pref').value;
+            const ambClass = document.getElementById('user-patient-ambulance-pref').value;
+
+            const combinedLocation = `${address}, ${region} Region`;
+            executeUnifiedDispatchWorkflow(name, age, blood, symptoms, combinedLocation, prefHosp, region, ambClass);
+        }
+
+        function triggerSimulateDispatch() {
+            const name = document.getElementById('sim-form-name').value || "name";
+            const age = document.getElementById('sim-form-age').value || "45";
+            const blood = document.getElementById('sim-form-blood').value || "O+";
+            const symptoms = document.getElementById('sim-form-symptoms').value || "Severe chest pressure.";
+            const region = "Behala";
+            const combinedLocation = "14 James Long Sarani, Behala Region";
+            const prefHosp = "AUTO";
+            const ambClass = "AUTO";
+
+            executeUnifiedDispatchWorkflow(name, age, blood, symptoms, combinedLocation, prefHosp, region, ambClass);
+        }
+
+        function determineDynamicSeverity(symptoms) {
+            const criticalKeywords = ["chest", "heart", "cardiac", "arterial", "bleed", "stroke", "slur", "droop", "unconscious", "chok", "breath", "lungs", "apnea"];
+            const lowerSymptoms = symptoms.toLowerCase();
+            let isCritical = criticalKeywords.some(keyword => lowerSymptoms.includes(keyword));
+            return isCritical ? "CRITICAL" : "HIGH";
+        }
+
+        function determineDynamicGuidance(symptoms) {
+            const sym = symptoms.toLowerCase();
+            let steps = [];
+
+            if (sym.includes("chest") || sym.includes("heart") || sym.includes("cardiac") || sym.includes("pain")) {
+                steps = [
+                    "<strong>Rest Upright:</strong> Keep the patient in a comfortable sitting position (Semi-Fowler's posture) to minimize pulmonary congestion.",
+                    "<strong>Chew Aspirin:</strong> If conscious and not allergic, assist them in chewing an adult aspirin (300mg) immediately.",
+                    "<strong>Prepare CPR:</strong> Stay beside the patient. If breathing ceases, start rapid chest compressions immediately."
+                ];
+            } else if (sym.includes("bleed") || sym.includes("wound") || sym.includes("cut") || sym.includes("accident")) {
+                steps = [
+                    "<strong>Apply Direct Pressure:</strong> Grab a clean cloth or sterile gauze and press directly on the wound without releasing pressure.",
+                    "<strong>Elevate Limb:</strong> Raise the bleeding area above heart level if no fracture is suspected.",
+                    "<strong>Avoid Shifting:</strong> If suspecting neck/spine injury, do not shift or rotate the patient's orientation."
+                ];
+            } else if (sym.includes("breath") || sym.includes("lung") || sym.includes("suffocat") || sym.includes("asthma") || sym.includes("apnea")) {
+                steps = [
+                    "<strong>Sit Fully Upright:</strong> Ensure the patient sits completely upright; do not allow them to lie flat.",
+                    "<strong>Rescue Inhaler:</strong> Help them administer 4 to 6 puffs of their personal rescue inhaler (spacer highly recommended).",
+                    "<strong>Maximize Airflow:</strong> Clear the area, open all nearby windows, and turn on active ventilation systems."
+                ];
+            } else if (sym.includes("stroke") || sym.includes("droop") || sym.includes("slur") || sym.includes("paraly")) {
+                steps = [
+                    "<strong>Record Onset Time:</strong> Note down the exact minute symptoms began; this timeline is vital for clot-busting medications.",
+                    "<strong>Lay on Left Side:</strong> Place the patient on their left side (recovery position) to prevent choking on fluids.",
+                    "<strong>NPO (Nil Per Os):</strong> Do NOT administer any food, water, or oral tablets, as swallowing reflex might be paralyzed."
+                ];
+            } else if (sym.includes("pregnant") || sym.includes("labor") || sym.includes("birth") || sym.includes("baby")) {
+                steps = [
+                    "<strong>Left-Side Rest:</strong> Keep the mother resting comfortably on her left side to optimize oxygenated blood supply.",
+                    "<strong>Secure Clean Towels:</strong> Prepare clean blankets, sanitized sheets, and sterile accessories in a secure space.",
+                    "<strong>Paced Breathing:</strong> Help the mother perform slow nasal inhalations and long deep exhalations."
+                ];
+            } else {
+                steps = [
+                    "<strong>Monitor State:</strong> Keep talking to the patient. Log active responsiveness and coordinate closely.",
+                    "<strong>Gather Medication Records:</strong> Lay out all active prescriptions, medical folders, and ID cards for incoming paramedics.",
+                    "<strong>Clear Pathways:</strong> Unlock front entryways, secure household pets, and prepare a bright, accessible entry route."
+                ];
+            }
+
+            return `
+                <ul class="space-y-3">
+                    ${steps.map(step => `
+                        <li class="flex items-start space-x-2.5">
+                            <span class="text-blue-600 font-bold mt-0.5">•</span>
+                            <span>${step}</span>
+                        </li>
+                    `).join('')}
+                </ul>
+            `;
+        }
+
+        function executeUnifiedDispatchWorkflow(name, age, blood, symptoms, loc, prefHosp, region, ambClass) {
+            document.getElementById('ai-waiting-placeholder').classList.add('hidden');
+            document.getElementById('ai-result-panel').classList.add('hidden');
+            document.getElementById('ai-scanning-overlay').classList.remove('hidden');
+            playSciFiSound('alert');
+
+            let stepText = document.getElementById('ai-status-step');
+            const steps = [
+                "Assessing customized symptom vector matrix...",
+                "Mapping transport pathways across Kolkata traffic corridors...",
+                "Consulting active beds & surgical registries...",
+                "Matching dynamic life-support ambulance capabilities..."
+            ];
+
+            let index = 0;
+            const timer = setInterval(() => {
+                if (index < steps.length) {
+                    stepText.innerText = steps[index];
+                    index++;
+                } else {
+                    clearInterval(timer);
+                    finalizeSystemDispatch(name, age, blood, symptoms, loc, prefHosp, region, ambClass);
+                }
+            }, 600);
+        }
+
+        function finalizeSystemDispatch(name, age, blood, symptoms, loc, prefHosp, region, ambClass) {
+            document.getElementById('ai-scanning-overlay').classList.add('hidden');
+            document.getElementById('ai-result-panel').classList.remove('hidden');
+
+            let assignedHospital = prefHosp;
+            if (prefHosp === "AUTO") {
+                if (region && regionHospitals[region]) {
+                    assignedHospital = regionHospitals[region][0];
+                } else {
+                    assignedHospital = "Vidyasagar State General Hospital";
+                }
+            }
+
+            let assignedAmbulance = "Ambulance Alpha-04 (MICU Class)";
+            if (ambClass !== "AUTO") {
+                assignedAmbulance = `Ambulance Unit-${Math.floor(10 + Math.random() * 90)} (${ambClass} Class)`;
+            } else {
+                const isCritical = determineDynamicSeverity(symptoms) === "CRITICAL";
+                assignedAmbulance = isCritical ? "Ambulance Rescue-02 (ALS Class)" : "Ambulance Unit-14 (BLS Class)";
+            }
+
+            const calculatedSeverity = determineDynamicSeverity(symptoms);
+            const dynamicReason = `Analysis detects acute symptom trends requiring ${calculatedSeverity === "CRITICAL" ? "ICU readiness and immediate trauma response" : "high priority ward placement"}. Routed dynamically to optimal available care vectors.`;
+
+            const request = {
+                id: generateUUID(),
+                patient_name: name,
+                age: age,
+                blood_group: blood,
+                symptoms: symptoms,
+                location: loc,
+                region: region || "Behala",
+                status: 'dispatched',
+                hospital_assigned: assignedHospital,
+                ambulance_assigned: assignedAmbulance,
+                eta: 6,
+                severity: calculatedSeverity,
+                reason: dynamicReason,
+                type: `EMERGENCY DISPATCH PROTOCOL`,
+                hospMeta: `${calculatedSeverity === "CRITICAL" ? "ICU Bed Locked • Specialist Notified" : "Emergency Room Space Allocated"}`,
+                ambMeta: `Paramedic Carter Standing By • ETA 6 mins`,
+                guidance: determineDynamicGuidance(symptoms)
+            };
+
+            AppState.activeRequest = request;
+            AppState.nurseVitals = { o2: 94, bp: '145/95', pulse: 98, hr: 98 };
+            AppState.nurseReqs = { icu: false, blood: false, oxygen: false, ventilator: false, doc: false };
+            AppState.hospitalPrep = { icu: false, blood: false, oxygen: false, ventilator: false, doc: false };
+
+            syncAllViewsWithActiveState();
+            startMovingAmbulanceRouteSimulation();
+            pushStateToCloud();
+            playSciFiSound('success');
+
+            setTimeout(() => {
+                transitionToTracking();
+            }, 800);
+        }
+
+        function syncAllViewsWithActiveState() {
+            const req = AppState.activeRequest;
+            if (!req) return;
+
+            document.getElementById('ai-emergency-type').innerText = req.type;
+            document.getElementById('ai-badge-severity').innerText = `SEVERITY: ${req.severity}`;
+            document.getElementById('ai-reason-statement').innerText = req.reason;
+            document.getElementById('ai-assigned-hospital').innerText = req.hospital_assigned;
+            document.getElementById('ai-hospital-meta').innerText = req.hospMeta;
+            document.getElementById('ai-assigned-ambulance').innerText = req.ambulance_assigned;
+            document.getElementById('ai-ambulance-meta').innerText = req.ambMeta;
+            document.getElementById('ai-timestamp').innerText = `TELEMETRY ID: #${req.id.substring(0, 8).toUpperCase()}`;
+
+            document.getElementById('track-dest-hospital').innerText = req.hospital_assigned;
+            document.getElementById('track-unit-id').innerText = req.ambulance_assigned;
+            document.getElementById('guidance-content').innerHTML = req.guidance;
+
+            document.getElementById('nurse-waiting-placeholder').classList.add('hidden');
+            document.getElementById('nurse-patient-details').classList.remove('hidden');
+            document.getElementById('nurse-detail-name').innerText = req.patient_name;
+            document.getElementById('nurse-detail-age').innerText = `${req.age} Yrs • ${req.blood_group}`;
+            document.getElementById('nurse-detail-loc').innerText = req.location;
+            document.getElementById('nurse-detail-symptoms').innerText = req.symptoms;
+
+            document.getElementById('val-o2').innerText = `${AppState.nurseVitals.o2}%`;
+            document.getElementById('slider-o2').value = AppState.nurseVitals.o2;
+            document.getElementById('val-bp').innerText = AppState.nurseVitals.bp;
+            document.getElementById('select-bp').value = AppState.nurseVitals.bp;
+            document.getElementById('val-pulse').innerText = AppState.nurseVitals.pulse;
+            document.getElementById('slider-pulse').value = AppState.nurseVitals.pulse;
+            document.getElementById('val-hr').innerText = AppState.nurseVitals.hr;
+            document.getElementById('slider-hr').value = AppState.nurseVitals.hr;
+
+            document.getElementById('chk-icu').checked = AppState.nurseReqs.icu;
+            document.getElementById('chk-blood').checked = AppState.nurseReqs.blood;
+            document.getElementById('chk-oxygen').checked = AppState.nurseReqs.oxygen;
+            document.getElementById('chk-ventilator').checked = AppState.nurseReqs.ventilator;
+            document.getElementById('chk-doc').checked = AppState.nurseReqs.doc;
+
+            document.getElementById('hospital-waiting-placeholder').classList.add('hidden');
+            document.getElementById('hospital-live-feed').classList.remove('hidden');
+            document.getElementById('hosp-field-name').innerText = req.patient_name;
+            document.getElementById('hosp-field-age').innerText = `${req.age}y • ${req.blood_group}`;
+            document.getElementById('hosp-field-eta').innerText = `0${req.eta}:00 MINS`;
+            document.getElementById('hosp-field-severity').innerText = req.severity;
+            document.getElementById('hospital-badge-status').innerText = `AMBULANCE DISPATCHED • ROUTE LIVE`;
+            document.getElementById('hospital-badge-status').className = "bg-red-50 border border-red-200 text-red-600 text-xs px-2.5 py-1 rounded-full font-bold shadow-sm";
+
+            document.getElementById('hosp-v-o2').innerText = `${AppState.nurseVitals.o2}%`;
+            document.getElementById('hosp-v-bp').innerText = AppState.nurseVitals.bp;
+            document.getElementById('hosp-v-pulse').innerText = AppState.nurseVitals.pulse;
+            document.getElementById('hosp-v-hr').innerText = AppState.nurseVitals.hr;
+
+            document.getElementById('sim-booking-form-wrap').classList.add('hidden');
+            document.getElementById('sim-booking-tracking').classList.remove('hidden');
+            document.getElementById('sim-track-severity').innerText = req.severity;
+            document.getElementById('sim-track-eta').innerText = `0${req.eta}:00 MINS`;
+            document.getElementById('sim-track-hosp').innerText = req.hospital_assigned;
+            document.getElementById('sim-track-amb').innerText = req.ambulance_assigned;
+            document.getElementById('sim-track-guidance').innerHTML = req.guidance;
+
+            document.getElementById('sim-nurse-waiting').classList.add('hidden');
+            document.getElementById('sim-nurse-active').classList.remove('hidden');
+            document.getElementById('sim-nurse-name').innerText = req.patient_name;
+            document.getElementById('sim-nurse-o2').innerText = `${AppState.nurseVitals.o2}%`;
+            document.getElementById('sim-nurse-hr').innerText = AppState.nurseVitals.hr;
+            document.getElementById('sim-chk-icu').checked = AppState.nurseReqs.icu;
+            document.getElementById('sim-chk-blood').checked = AppState.nurseReqs.blood;
+            document.getElementById('sim-chk-oxygen').checked = AppState.nurseReqs.oxygen;
+
+            document.getElementById('sim-hosp-waiting').classList.add('hidden');
+            document.getElementById('sim-hosp-active').classList.remove('hidden');
+            document.getElementById('sim-hosp-eta').innerText = `ETA 0${req.eta}:00`;
+            document.getElementById('sim-hosp-summary').innerText = `${req.patient_name} • ${req.type}`;
+            document.getElementById('sim-hosp-v-o2').innerText = `${AppState.nurseVitals.o2}%`;
+            document.getElementById('sim-hosp-v-pulse').innerText = AppState.nurseVitals.pulse;
+            document.getElementById('sim-hosp-v-hr').innerText = AppState.nurseVitals.hr;
+
+            updatePrepPanelUI();
+        }
+
+        function transitionToTracking() {
+            switchView('tracking');
+        }
+
+        function initOrRefreshMap() {
+            const mapEl = document.getElementById('live-map');
+            if (!mapEl) return;
+
+            let targetCenter = [22.5726, 88.3639]; // Default Kolkata Center
+            const req = AppState.activeRequest;
+
+            if (req && req.region && regionCoordinates[req.region]) {
+                targetCenter = regionCoordinates[req.region];
+            }
+
+            if (typeof L === 'undefined') {
+                console.warn("Leaflet library not loaded. Deferring tracking map initialization.");
+                return;
+            }
+
+            if (!trackingMap) {
+                trackingMap = L.map('live-map', {
+                    zoomControl: false,
+                    attributionControl: false
+                }).setView(targetCenter, 14);
+
+                L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
+                    maxZoom: 20
+                }).addTo(trackingMap);
+            } else {
+                trackingMap.setView(targetCenter, 14);
+            }
+
+            // CRITICAL: Call invalidate size inside a safe frame cycle to prevent gray map borders
+            setTimeout(() => {
+                trackingMap.invalidateSize();
+                drawStaticRouteSimulation(targetCenter);
+            }, 100);
+        }
+
+        function drawStaticRouteSimulation(destinationCoord) {
+            if (!trackingMap || typeof L === 'undefined') return;
+
+            if (ambulanceMarker) trackingMap.removeLayer(ambulanceMarker);
+            if (routeLine) trackingMap.removeLayer(routeLine);
+
+            const startPoint = [destinationCoord[0] + 0.015, destinationCoord[1] - 0.012];
+            const endPoint = destinationCoord;
+
+            const customIcon = L.divIcon({
+                className: 'custom-div-icon',
+                html: `
+                    <div class="relative w-8 h-8 flex items-center justify-center bg-blue-50 rounded-full border border-blue-600 shadow-md">
+                        <i class="fa-solid fa-ambulance text-blue-600 text-xs animate-pulse"></i>
+                        <div class="absolute inset-0 rounded-full border border-blue-400 radar-wave"></div>
+                    </div>
+                `,
+                iconSize: [32, 32],
+                iconAnchor: [16, 16]
+            });
+
+            ambulanceMarker = L.marker(startPoint, { icon: customIcon }).addTo(trackingMap);
+
+            const pathCoords = [
+                startPoint,
+                [startPoint[0] - 0.004, startPoint[1] + 0.003],
+                [startPoint[0] - 0.008, startPoint[1] + 0.006],
+                [startPoint[0] - 0.012, startPoint[1] + 0.009],
+                endPoint
+            ];
+
+            routeLine = L.polyline(pathCoords, {
+                color: '#2563eb',
+                weight: 5,
+                opacity: 0.85,
+                dashArray: '8, 8'
+            }).addTo(trackingMap);
+
+            trackingMap.fitBounds(routeLine.getBounds(), { padding: [40, 40] });
+        }
+
+        function startMovingAmbulanceRouteSimulation() {
+            if (simulationTimerId) {
+                clearInterval(simulationTimerId);
+            }
+
+            mockSimCounter = 0;
+
+            simulationTimerId = setInterval(() => {
+                const req = AppState.activeRequest;
+                if (!req) {
+                    clearInterval(simulationTimerId);
+                    return;
+                }
+
+                let destinationCoord = [22.5726, 88.3639];
+                if (req.region && regionCoordinates[req.region]) {
+                    destinationCoord = regionCoordinates[req.region];
+                }
+
+                const startPoint = [destinationCoord[0] + 0.015, destinationCoord[1] - 0.012];
+                const routePoints = [
+                    startPoint,
+                    [startPoint[0] - 0.004, startPoint[1] + 0.003],
+                    [startPoint[0] - 0.008, startPoint[1] + 0.006],
+                    [startPoint[0] - 0.012, startPoint[1] + 0.009],
+                    destinationCoord
+                ];
+
+                mockSimCounter++;
+                const pointIndex = Math.min(mockSimCounter, routePoints.length - 1);
+                const currentCoord = routePoints[pointIndex];
+
+                if (ambulanceMarker && trackingMap) {
+                    ambulanceMarker.setLatLng(currentCoord);
+                    trackingMap.panTo(currentCoord);
+                }
+
+                const remainingMins = Math.max(0, 6 - mockSimCounter);
+                AppState.activeRequest.eta = remainingMins;
+
+                document.getElementById('tracking-eta-timer').innerText = `0${remainingMins}:00 MINS`;
+                document.getElementById('hosp-field-eta').innerText = `0${remainingMins}:00 MINS`;
+                document.getElementById('sim-track-eta').innerText = `0${remainingMins}:00 MINS`;
+                document.getElementById('sim-hosp-eta').innerText = `ETA 0${remainingMins}:00`;
+
+                if (pointIndex === 1) {
+                    document.getElementById('track-traffic-status').innerText = "Ambulance proceeding through regional artery. Speeds nominal.";
+                } else if (pointIndex === 2) {
+                    document.getElementById('track-traffic-status').innerText = "Secondary lanes cleared. Siren operational.";
+                } else if (pointIndex === 3) {
+                    document.getElementById('track-traffic-status').innerText = "Ambulance nearing regional intersection. Vitals streaming live.";
+                }
+
+                if (remainingMins === 0) {
+                    clearInterval(simulationTimerId);
+                    triggerAmbulanceArrivalEvent();
+                }
+            }, 6000);
+        }
+
+        function updateParamedicVital(field, value) {
+            if (!AppState.activeRequest) return;
+
+            if (field === 'o2') {
+                AppState.nurseVitals.o2 = parseInt(value);
+                document.getElementById('val-o2').innerText = `${value}%`;
+                document.getElementById('sim-nurse-o2').innerText = `${value}%`;
+                document.getElementById('hosp-v-o2').innerText = `${value}%`;
+                document.getElementById('sim-hosp-v-o2').innerText = `${value}%`;
+            } else if (field === 'bp') {
+                AppState.nurseVitals.bp = value;
+                document.getElementById('val-bp').innerText = value;
+                document.getElementById('hosp-v-bp').innerText = value;
+            } else if (field === 'pulse') {
+                AppState.nurseVitals.pulse = parseInt(value);
+                document.getElementById('val-pulse').innerText = value;
+                document.getElementById('hosp-v-pulse').innerText = value;
+                document.getElementById('sim-hosp-v-pulse').innerText = value;
+            } else if (field === 'hr') {
+                AppState.nurseVitals.hr = parseInt(value);
+                document.getElementById('val-hr').innerText = value;
+                document.getElementById('sim-nurse-hr').innerText = value;
+                document.getElementById('hosp-v-hr').innerText = value;
+                document.getElementById('sim-hosp-v-hr').innerText = value;
+            }
+
+            pushStateToCloud();
+        }
+
+        function updateNurseRequirement(key, isChecked) {
+            AppState.nurseReqs[key] = isChecked;
+
+            document.getElementById('chk-icu').checked = AppState.nurseReqs.icu;
+            document.getElementById('chk-blood').checked = AppState.nurseReqs.blood;
+            document.getElementById('chk-oxygen').checked = AppState.nurseReqs.oxygen;
+            document.getElementById('chk-ventilator').checked = AppState.nurseReqs.ventilator;
+            document.getElementById('chk-doc').checked = AppState.nurseReqs.doc;
+
+            document.getElementById('sim-chk-icu').checked = AppState.nurseReqs.icu;
+            document.getElementById('sim-chk-blood').checked = AppState.nurseReqs.blood;
+            document.getElementById('sim-chk-oxygen').checked = AppState.nurseReqs.oxygen;
+
+            updatePrepPanelUI();
+            pushStateToCloud();
+        }
+
+        function sendParamedicUpdateToHospital() {
+            playSciFiSound('alert');
+            
+            const dot = document.getElementById('t-line-nurse-dot');
+            const txt = document.getElementById('t-line-nurse-text');
+            const sub = document.getElementById('t-line-nurse-sub');
+            if (dot && txt && sub) {
+                dot.classList.remove('bg-slate-300');
+                dot.classList.add('bg-emerald-500');
+                txt.classList.remove('text-slate-600');
+                txt.classList.add('text-slate-900', 'font-black');
+                txt.innerText = "Paramedic Vitals Captured & Synchronized";
+                sub.innerText = "Oxygen level, blood pressure, pulse, and systemic prerequisites logged.";
+            }
+
+            document.getElementById('hospital-badge-status').innerText = `VITALS STREAMING LIVE • ICU REQUISITION SENT`;
+            document.getElementById('hospital-badge-status').className = "bg-red-50 border border-red-200 text-red-600 text-xs px-2.5 py-1 rounded-full font-bold animate-pulse shadow-sm";
+        }
+
+        function updatePrepPanelUI() {
+            const reqs = AppState.nurseReqs;
+            const prep = AppState.hospitalPrep;
+
+            const components = {
+                icu: {
+                    panel: 'panel-prep-icu',
+                    icon: 'icon-prep-icu',
+                    meta: 'meta-prep-icu',
+                    btn: 'btn-prep-icu',
+                    simLine: 'sim-prep-line-icu',
+                    simBtn: 'sim-btn-icu'
+                },
+                blood: {
+                    panel: 'panel-prep-blood',
+                    icon: 'icon-prep-blood',
+                    meta: 'meta-prep-blood',
+                    btn: 'btn-prep-blood',
+                    simLine: 'sim-prep-line-blood',
+                    simBtn: 'sim-btn-blood'
+                },
+                oxygen: {
+                    panel: 'panel-prep-oxygen',
+                    icon: 'icon-prep-oxygen',
+                    meta: 'meta-prep-oxygen',
+                    btn: 'btn-prep-oxygen',
+                    simLine: 'sim-prep-line-oxygen',
+                    simBtn: 'sim-btn-oxygen'
+                },
+                ventilator: {
+                    panel: 'panel-prep-ventilator',
+                    icon: 'icon-prep-ventilator',
+                    meta: 'meta-prep-ventilator',
+                    btn: 'btn-prep-ventilator'
+                },
+                doc: {
+                    panel: 'panel-prep-doc',
+                    icon: 'icon-prep-doc',
+                    meta: 'meta-prep-doc',
+                    btn: 'btn-prep-doc'
+                }
+            };
+
+            for (const key in components) {
+                const c = components[key];
+                const isNurseRequested = reqs[key];
+                const isHospitalReady = prep[key];
+
+                const panelEl = document.getElementById(c.panel);
+                const iconEl = document.getElementById(c.icon);
+                const metaEl = document.getElementById(c.meta);
+                const btnEl = document.getElementById(c.btn);
+
+                if (!panelEl) continue;
+
+                if (isHospitalReady) {
+                    panelEl.className = "p-3 bg-emerald-50 border border-emerald-200 rounded-xl flex items-center justify-between transition-all shadow-sm";
+                    iconEl.className = "w-8 h-8 rounded-lg bg-emerald-100 border border-emerald-200 flex items-center justify-center text-emerald-600";
+                    metaEl.className = "block text-[10px] text-emerald-600 font-bold";
+                    metaEl.innerText = "STANDBY READY • LOCKED";
+                    btnEl.className = "px-3 py-1.5 bg-emerald-600 text-white font-bold text-[10px] rounded-lg uppercase tracking-wider transition-all shadow-sm";
+                    btnEl.innerText = "SECURED";
+                } else if (isNurseRequested) {
+                    panelEl.className = "p-3 bg-red-50 border border-red-200 rounded-xl flex items-center justify-between transition-all shadow-sm";
+                    iconEl.className = "w-8 h-8 rounded-lg bg-red-100 border border-red-200 flex items-center justify-center text-red-600";
+                    metaEl.className = "block text-[10px] text-red-600 font-bold animate-pulse";
+                    metaEl.innerText = "REQUIRED IMMEDIATELY";
+                    btnEl.className = "px-3 py-1.5 bg-red-600 hover:bg-red-700 text-white font-bold text-[10px] rounded-lg uppercase tracking-wider transition-all shadow-sm";
+                    btnEl.innerText = "ACK & PREP";
+                } else {
+                    panelEl.className = "p-3 bg-white border border-blue-100 rounded-xl flex items-center justify-between transition-all shadow-sm";
+                    iconEl.className = "w-8 h-8 rounded-lg bg-blue-50 border border-blue-100 flex items-center justify-center text-slate-500";
+                    metaEl.className = "block text-[10px] text-slate-500";
+                    metaEl.innerText = "Awaiting Request";
+                    btnEl.className = "px-3 py-1.5 bg-slate-50 border border-slate-200 hover:border-blue-500 text-slate-600 font-bold text-[10px] rounded-lg uppercase tracking-wider transition-all shadow-sm";
+                    btnEl.innerText = "Ready";
+                }
+
+                if (c.simLine && c.simBtn) {
+                    const simLineEl = document.getElementById(c.simLine);
+                    const simBtnEl = document.getElementById(c.simBtn);
+                    if (simLineEl && simBtnEl) {
+                        if (isHospitalReady) {
+                            simLineEl.className = "p-2 rounded border border-emerald-200 bg-emerald-50 flex items-center justify-between text-xs text-slate-700 shadow-sm";
+                            simBtnEl.className = "px-2 py-0.5 bg-emerald-600 text-[9px] rounded uppercase font-bold text-white shadow-sm";
+                            simBtnEl.innerText = "READY";
+                        } else if (isNurseRequested) {
+                            simLineEl.className = "p-2 rounded border border-red-200 bg-red-50 flex items-center justify-between text-xs text-slate-700 shadow-sm";
+                            simBtnEl.className = "px-2 py-0.5 bg-red-600 text-[9px] rounded uppercase font-bold text-white animate-pulse shadow-sm";
+                            simBtnEl.innerText = "PREP";
+                        } else {
+                            simLineEl.className = "p-2 rounded border border-blue-100 bg-white flex items-center justify-between text-xs text-slate-700 shadow-sm";
+                            simBtnEl.className = "px-2 py-0.5 bg-slate-100 text-[9px] rounded uppercase font-bold text-slate-500";
+                            simBtnEl.innerText = "AWAIT";
+                        }
+                    }
+                }
+            }
+
+            checkHospitalOverallPreparationSufficient();
+        }
+
+        function toggleHospitalPrepState(key) {
+            AppState.hospitalPrep[key] = !AppState.hospitalPrep[key];
+            updatePrepPanelUI();
+            pushStateToCloud();
+        }
+
+        function checkHospitalOverallPreparationSufficient() {
+            const reqs = AppState.nurseReqs;
+            const prep = AppState.hospitalPrep;
+
+            let requestedCount = 0;
+            let preparedCount = 0;
+
+            for (const key in reqs) {
+                if (reqs[key]) {
+                    requestedCount++;
+                    if (prep[key]) {
+                        preparedCount++;
+                    }
+                }
+            }
+
+            if (requestedCount > 0 && requestedCount === preparedCount) {
+                const dot = document.getElementById('t-line-hosp-dot');
+                const txt = document.getElementById('t-line-hosp-text');
+                const sub = document.getElementById('t-line-hosp-sub');
+                if (dot && txt && sub) {
+                    dot.classList.remove('bg-slate-300');
+                    dot.classList.add('bg-emerald-500');
+                    txt.classList.remove('text-slate-600');
+                    txt.classList.add('text-slate-900', 'font-black');
+                    txt.innerText = "Emergency Resources Locked & Prepared";
+                    sub.innerText = "Surgical team, critical ICU unit, and oxygen systems in absolute high readiness.";
+                }
+
+                document.getElementById('hospital-badge-status').innerText = `ER SECURED • ALL INFRASTRUCTURE READY`;
+                document.getElementById('hospital-badge-status').className = "bg-emerald-50 border border-emerald-200 text-emerald-600 text-xs px-2.5 py-1 rounded-full font-bold shadow-sm";
+            }
+        }
+
+        function triggerAmbulanceArrivalEvent() {
+            playSciFiSound('success');
+            document.getElementById('arrival-overlay').classList.remove('hidden');
+        }
+
+        function dismissArrivalSuccessScreen() {
+            document.getElementById('arrival-overlay').classList.add('hidden');
+            resetUnifiedDemo();
+            switchView('user');
+        }
+
+        function resetUnifiedDemo() {
+            if (simulationTimerId) {
+                clearInterval(simulationTimerId);
+            }
+
+            AppState.activeRequest = null;
+            AppState.nurseVitals = { o2: 94, bp: '145/95', pulse: 98, hr: 98 };
+            AppState.nurseReqs = { icu: false, blood: false, oxygen: false, ventilator: false, doc: false };
+            AppState.hospitalPrep = { icu: false, blood: false, oxygen: false, ventilator: false, doc: false };
+
+            document.getElementById('emergency-form').reset();
+            
+            Object.keys(symptomPresets).forEach(key => {
+                const btn = document.getElementById(`preset-btn-${key}`);
+                if (btn) {
+                    btn.className = "p-3 rounded-xl border border-slate-100 bg-white hover:border-blue-300 text-left transition-all group shadow-sm";
+                }
+            });
+
+            document.getElementById('ai-triage-card').classList.add('hidden');
+
+            document.getElementById('ai-waiting-placeholder').classList.remove('hidden');
+            document.getElementById('ai-result-panel').classList.add('hidden');
+            document.getElementById('ai-scanning-overlay').classList.add('hidden');
+
+            document.getElementById('nurse-waiting-placeholder').classList.remove('hidden');
+            document.getElementById('nurse-patient-details').classList.add('hidden');
+
+            document.getElementById('hospital-waiting-placeholder').classList.remove('hidden');
+            document.getElementById('hospital-live-feed').classList.add('hidden');
+
+            document.getElementById('sim-booking-form-wrap').classList.remove('hidden');
+            document.getElementById('sim-booking-tracking').classList.add('hidden');
+            document.getElementById('sim-nurse-waiting').classList.remove('hidden');
+            document.getElementById('sim-nurse-active').classList.add('hidden');
+            document.getElementById('sim-hosp-waiting').classList.remove('hidden');
+            document.getElementById('sim-hosp-active').classList.add('hidden');
+
+            const timelineSteps = [
+                {
+                    dot: 't-line-nurse-dot',
+                    txt: 't-line-nurse-text',
+                    sub: 't-line-nurse-sub',
+                    origTxt: 'In-Transit Paramedic Assessment Awaiting',
+                    origSub: 'Updates automatically when paramedics commit vitals logs.'
+                },
+                {
+                    dot: 't-line-hosp-dot',
+                    txt: 't-line-hosp-text',
+                    sub: 't-line-hosp-sub',
+                    origTxt: 'Clinical Preparations Commenced',
+                    origSub: 'Resources locking into priority standby states.'
+                }
+            ];
+
+            timelineSteps.forEach(s => {
+                const d = document.getElementById(s.dot);
+                const t = document.getElementById(s.txt);
+                const sb = document.getElementById(s.sub);
+                if (d && t && sb) {
+                    d.className = "absolute -left-[29px] top-1.5 w-3 h-3 rounded-full bg-slate-300 border-2 border-white";
+                    t.className = "font-bold text-slate-600";
+                    t.innerText = s.origTxt;
+                    sb.innerText = s.origSub;
+                }
+            });
+
+            if (ambulanceMarker && trackingMap) {
+                trackingMap.removeLayer(ambulanceMarker);
+                ambulanceMarker = null;
+            }
+            if (routeLine && trackingMap) {
+                trackingMap.removeLayer(routeLine);
+                routeLine = null;
+            }
+
+            pushStateToCloud();
+        }
+
+        function generateUUID() {
+            if (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function') {
+                return crypto.randomUUID();
+            }
+            return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+                var r = Math.random() * 16 | 0, v = c == 'x' ? r : (r & 0x3 | 0x8);
+                return v.toString(16);
+            });
+        }
+
+        function triggerParentToggleChat() {
+            try {
+                if (window.self !== window.top) {
+                    window.parent.postMessage({ type: 'toggleChat' }, '*');
+                    return;
+                }
+            } catch (e) {
+                console.warn("parent postMessage failed:", e);
+            }
+            window.location.href = 'Chatbot.html';
+        }
+
+        function initInternalSupabase() {
+            if (SUPABASE_URL && SUPABASE_ANON_KEY) {
+                try {
+                    db = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+                    AppState.isDemoMode = false;
+                    
+                    const dot = document.getElementById('db-indicator-dot');
+                    const txt = document.getElementById('db-indicator-text');
+                    if (dot && txt) {
+                        dot.classList.remove('bg-blue-500');
+                        dot.classList.add('bg-emerald-500');
+                        txt.innerText = "Supabase Realtime Cloud Sync Active";
+                    }
+
+                    listenToCloudChannels();
+                } catch (err) {
+                    AppState.isDemoMode = true;
+                }
+            } else {
+                AppState.isDemoMode = true;
+                const dot = document.getElementById('db-indicator-dot');
+                const txt = document.getElementById('db-indicator-text');
+                if (dot && txt) {
+                    dot.className = "w-2.5 h-2.5 rounded-full bg-blue-500 animate-pulse";
+                    txt.innerText = "Local Simulator Active";
+                }
+            }
+        }
+
+        async function pushStateToCloud() {
+            if (AppState.isDemoMode || !db) return;
+
+            try {
+                const statePayload = {
+                    id: AppState.activeRequest ? AppState.activeRequest.id : 'empty_pulse',
+                    request_data: AppState.activeRequest,
+                    nurse_vitals: AppState.nurseVitals,
+                    nurse_reqs: AppState.nurseReqs,
+                    hospital_prep: AppState.hospitalPrep,
+                    updated_at: new Date().toISOString()
+                };
+
+                await db
+                    .from('emergency_coordination_state')
+                    .upsert(statePayload);
+            } catch (err) {}
+        }
+
+        function listenToCloudChannels() {
+            if (AppState.isDemoMode || !db) return;
+
+            db.channel('coordination_state_updates')
+                .on(
+                    'postgres_changes',
+                    { event: '*', schema: 'public', table: 'emergency_coordination_state' },
+                    (payload) => {
+                        const newRecord = payload.new;
+                        if (newRecord && newRecord.id !== 'empty_pulse') {
+                            AppState.activeRequest = newRecord.request_data;
+                            AppState.nurseVitals = newRecord.nurse_vitals;
+                            AppState.nurseReqs = newRecord.nurse_reqs;
+                            AppState.hospitalPrep = newRecord.hospital_prep;
+                            syncAllViewsWithActiveState();
+                        } else if (newRecord && newRecord.id === 'empty_pulse') {
+                            resetUnifiedDemo();
+                        }
+                    }
+                )
+                .subscribe();
+        }
+    </script>
+</body>
+</html>

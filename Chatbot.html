@@ -1,0 +1,1868 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>resq | Intelligent Healthcare Ecosystem</title>
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;700;900&family=Rajdhani:wght@400;500;600;700&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+<script>
+    if (window.self !== window.top) {
+        document.documentElement.classList.add('in-iframe');
+        try {
+            const parentContainer = window.parent.document.getElementById('app-container');
+            if (parentContainer) {
+                const isDark = !parentContainer.classList.contains('light-theme');
+                if (isDark) {
+                    document.documentElement.classList.add('dark-theme');
+                }
+            }
+        } catch (e) {
+            console.log("Cross-origin or parent access restricted:", e);
+        }
+    }
+    
+    window.addEventListener('message', function(event) {
+        if (event.data && event.data.type === 'theme') {
+            if (event.data.theme === 'dark') {
+                document.documentElement.classList.add('dark-theme');
+            } else {
+                document.documentElement.classList.remove('dark-theme');
+            }
+        }
+    });
+</script>
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+:root {
+  --bg-main: #f8fafc;
+  --bg-card: #ffffff;
+  --text-main: #0f172a;
+  --text-muted: #64748b;
+  --primary: #2563eb;
+  --primary-hover: #1d4ed8;
+  --primary-light: #eff6ff;
+  --primary-glow: rgba(37, 99, 235, 0.15);
+  --border-light: #e2e8f0;
+  --border-med: #cbd5e1;
+  --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+  --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+  --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+  
+  --red-alert: #ef4444;
+  --red-light: #fef2f2;
+  --orange: #f97316;
+  --orange-light: #fff7ed;
+  --yellow: #eab308;
+  --green: #10b981;
+  --green-light: #ecfdf5;
+  --white: #ffffff;
+  --bg-white: #ffffff;
+  
+  --font-main: 'Inter', sans-serif;
+  --font-head: 'Rajdhani', sans-serif;
+  --font-mono: 'Orbitron', monospace;
+}
+.dark-theme {
+  --bg-main: #0b0f19;
+  --bg-card: #131a2e;
+  --text-main: #ffffff;
+  --text-muted: #94a3b8;
+  --primary: #0ea5e9;
+  --primary-hover: #38bdf8;
+  --primary-light: rgba(14, 165, 233, 0.1);
+  --primary-glow: rgba(14, 165, 233, 0.2);
+  --border-light: rgba(255, 255, 255, 0.08);
+  --border-med: rgba(255, 255, 255, 0.15);
+  --bg-white: #131a2e;
+  --red-light: rgba(239, 68, 68, 0.15);
+  --orange-light: rgba(249, 115, 22, 0.15);
+  --green-light: rgba(16, 185, 129, 0.15);
+}
+.dark-theme .resq-nav {
+  background: rgba(19, 26, 46, 0.9) !important;
+  border-bottom-color: var(--border-light) !important;
+}
+.dark-theme .nav-brand {
+  color: var(--primary) !important;
+}
+.dark-theme .disclaimer-box {
+  background: rgba(234, 179, 8, 0.08) !important;
+  border-color: rgba(234, 179, 8, 0.2) !important;
+  color: #fef08a !important;
+}
+.in-iframe .resq-nav {
+  display: none !important;
+}
+.in-iframe .hero {
+  padding-top: 20px !important;
+  min-height: calc(100vh - 60px) !important;
+}
+.in-iframe body {
+  background: var(--bg-main) !important;
+}
+html { scroll-behavior: smooth; overflow-x: hidden; }
+body { background: var(--bg-main); color: var(--text-main); font-family: var(--font-main); overflow-x: hidden; min-height: 100vh; }
+
+.resq-nav { position: fixed; top: 0; width: 100%; height: 70px; background: rgba(255, 255, 255, 0.9); backdrop-filter: blur(12px); border-bottom: 1px solid var(--border-light); display: flex; align-items: center; justify-content: space-between; padding: 0 40px; z-index: 9999; box-shadow: var(--shadow-sm); }
+.nav-brand { font-family: var(--font-mono); font-size: 1.8rem; font-weight: 700; color: var(--primary); display: flex; align-items: center; gap: 8px; letter-spacing: -1px; }
+.ai-badge { background: var(--primary-light); color: var(--primary); padding: 2px 8px; border-radius: 6px; font-size: 0.8rem; font-family: var(--font-main); font-weight: 600; border: 1px solid var(--border-light); }
+.lang-selector { display: flex; align-items: center; gap: 12px; }
+.lang-label { font-size: 0.85rem; color: var(--text-muted); font-weight: 500; }
+.lang-selector select { background: var(--bg-card); border: 1px solid var(--border-med); color: var(--text-main); padding: 8px 16px; border-radius: 8px; font-family: var(--font-main); font-weight: 500; outline: none; cursor: pointer; transition: all 0.2s; box-shadow: var(--shadow-sm); }
+.lang-selector select:hover { border-color: var(--primary); }
+
+.emergency-status-badge { position: fixed; bottom: 20px; left: 20px; z-index: 9990; display: flex; align-items: center; gap: 8px; background: var(--bg-card); border: 1px solid var(--border-light); padding: 8px 16px; border-radius: 50px; font-size: 0.75rem; font-weight: 600; box-shadow: var(--shadow-md); color: var(--text-muted); }
+.status-dot { width: 8px; height: 8px; background: var(--green); border-radius: 50%; animation: pulseDot 1.5s infinite; }
+.status-text { color: var(--text-main); }
+
+.hero { position: relative; min-height: 100vh; display: flex; align-items: center; justify-content: center; text-align: center; background: radial-gradient(ellipse at 50% 30%, var(--primary-light) 0%, var(--bg-main) 70%); padding-top: 70px; }
+.hero-bg-grid { position: absolute; inset: 0; background-image: linear-gradient(var(--border-light) 1px, transparent 1px), linear-gradient(90deg, var(--border-light) 1px, transparent 1px); background-size: 50px 50px; opacity: 0.5; }
+.hero-content { position: relative; z-index: 5; max-width: 800px; padding: 40px 24px; }
+.hero-badge { display: inline-block; background: var(--bg-white); border: 1px solid var(--border-light); color: var(--primary); font-family: var(--font-mono); font-size: 0.7rem; font-weight: 600; letter-spacing: 2px; padding: 8px 20px; border-radius: 50px; margin-bottom: 24px; box-shadow: var(--shadow-sm); }
+.hero-title { margin-bottom: 16px; }
+.title-line1 { display: block; font-family: var(--font-head); font-size: clamp(2rem, 5vw, 3rem); font-weight: 600; color: var(--text-main); letter-spacing: 1px; }
+.title-line2 { display: block; font-family: var(--font-head); font-size: clamp(2.5rem, 6vw, 4.5rem); font-weight: 800; color: var(--primary); letter-spacing: -1px; }
+.hero-subtitle { font-size: 1.1rem; color: var(--text-muted); margin-bottom: 40px; }
+
+.btn-primary { background: var(--primary); color: var(--white); border: none; padding: 16px 36px; border-radius: 12px; font-family: var(--font-main); font-size: 1.1rem; font-weight: 600; cursor: pointer; transition: all 0.3s; display: inline-flex; align-items: center; gap: 12px; box-shadow: 0 4px 14px 0 rgba(37, 99, 235, 0.39); }
+.btn-primary:hover { background: var(--primary-hover); transform: translateY(-2px); box-shadow: 0 6px 20px rgba(37, 99, 235, 0.4); }
+
+.ecg-container { width: 100%; max-width: 500px; height: 60px; margin: 0 auto 40px; position: relative; }
+.ecg-line { fill: none; stroke: var(--primary); stroke-width: 2.5; stroke-dasharray: 2000; stroke-dashoffset: 2000; animation: drawLine 3s ease forwards; filter: drop-shadow(0 2px 4px rgba(37,99,235,0.2)); }
+.ecg-pulse { position: absolute; right: 0; top: 50%; transform: translateY(-50%); width: 8px; height: 8px; background: var(--primary); border-radius: 50%; animation: pulseMove 3s ease infinite; }
+
+section { padding: 80px 24px; max-width: 1200px; margin: 0 auto; position: relative; z-index: 10; }
+.section-header { text-align: center; margin-bottom: 50px; }
+.section-tag { display: inline-block; font-size: 0.75rem; font-weight: 700; letter-spacing: 2px; color: var(--primary); text-transform: uppercase; margin-bottom: 12px; }
+.section-title { font-family: var(--font-head); font-size: 2.5rem; font-weight: 700; color: var(--text-main); }
+
+.symptoms-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 20px; }
+.symptom-card { background: var(--bg-card); border: 1px solid var(--border-light); border-radius: 16px; padding: 30px 20px; text-align: center; cursor: pointer; transition: all 0.3s; box-shadow: var(--shadow-sm); }
+.symptom-card:hover, .symptom-card.active { border-color: var(--primary); transform: translateY(-5px); box-shadow: var(--shadow-lg); }
+.symptom-card.active { background: var(--primary-light); border-width: 2px; }
+.card-icon { font-size: 2.5rem; margin-bottom: 15px; }
+.card-title { font-size: 1.1rem; font-weight: 600; color: var(--text-main); margin-bottom: 15px; }
+.card-severity { display: inline-block; font-size: 0.65rem; font-weight: 700; letter-spacing: 1px; padding: 4px 10px; border-radius: 6px; text-transform: uppercase; }
+.card-severity.critical { color: var(--red-alert); background: var(--red-light); border: 1px solid rgba(239, 68, 68, 0.2); }
+.card-severity.high { color: var(--orange); background: var(--orange-light); border: 1px solid rgba(249, 115, 22, 0.2); }
+.card-severity.moderate { color: var(--yellow); background: #fefce8; border: 1px solid rgba(234, 179, 8, 0.2); }
+
+.questions-container { display: flex; flex-direction: column; gap: 20px; max-width: 700px; margin: 0 auto; }
+.question-item { background: var(--bg-card); border: 1px solid var(--border-light); border-radius: 12px; padding: 24px; box-shadow: var(--shadow-sm); border-left: 4px solid var(--primary); }
+.question-label { font-size: 1.1rem; font-weight: 500; color: var(--text-main); margin-bottom: 16px; }
+.q-options { display: flex; flex-wrap: wrap; gap: 10px; }
+.q-opt { background: var(--bg-white); border: 1px solid var(--border-med); color: var(--text-muted); padding: 10px 20px; border-radius: 8px; cursor: pointer; font-family: var(--font-main); font-weight: 500; transition: all 0.2s; font-size: 0.95rem; }
+.q-opt:hover { border-color: var(--primary); color: var(--primary); background: var(--primary-light); }
+.q-opt.selected { background: var(--primary); border-color: var(--primary); color: var(--white); box-shadow: var(--shadow-sm); }
+.btn-analyze { display: block; margin: 40px auto 0; background: var(--text-main); color: var(--white); border: none; padding: 16px 48px; border-radius: 12px; font-size: 1.05rem; font-weight: 600; cursor: pointer; transition: all 0.3s; box-shadow: var(--shadow-md); }
+.btn-analyze:hover { background: var(--primary); transform: translateY(-2px); }
+
+.analysis-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 30px; max-width: 900px; margin: 0 auto; }
+.analysis-card { background: var(--bg-card); border: 1px solid var(--border-light); border-radius: 16px; padding: 40px; display: flex; flex-direction: column; align-items: center; justify-content: center; box-shadow: var(--shadow-md); }
+.severity-ring-wrap { position: relative; width: 180px; height: 180px; }
+.severity-ring { width: 100%; height: 100%; transform: rotate(-90deg); }
+.ring-bg { fill: none; stroke: var(--border-light); stroke-width: 8; }
+.ring-fill { fill: none; stroke: var(--primary); stroke-width: 8; stroke-linecap: round; transition: stroke-dashoffset 1s ease; }
+.ring-inner { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); text-align: center; }
+.ring-score { font-family: var(--font-head); font-size: 3rem; font-weight: 700; color: var(--text-main); }
+
+.scan-data { display: flex; flex-direction: column; gap: 16px; width: 100%; }
+.scan-row { display: flex; justify-content: space-between; font-size: 0.95rem; color: var(--text-muted); border-bottom: 1px solid var(--border-light); padding-bottom: 12px; font-weight: 500; }
+.scan-val { font-weight: 700; color: var(--primary); }
+.emergency-level-badge { text-align: center; padding: 16px; margin-top: 20px; width: 100%; background: var(--primary-light); border: 1px solid var(--primary); border-radius: 12px; font-weight: 700; color: var(--primary); font-size: 1.1rem; }
+
+.prediction-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 20px; margin-bottom: 30px; }
+.prediction-card { background: var(--bg-card); border: 1px solid var(--border-light); padding: 24px; border-radius: 12px; box-shadow: var(--shadow-sm); border-top: 4px solid var(--primary); }
+.pred-icon { font-size: 2rem; margin-bottom: 12px; }
+.pred-label { font-size: 0.8rem; color: var(--text-muted); text-transform: uppercase; font-weight: 600; letter-spacing: 1px; margin-bottom: 8px; }
+.pred-value { font-size: 1.2rem; font-weight: 700; color: var(--text-main); }
+.suggestions-container { display: flex; flex-direction: column; gap: 15px; max-width: 800px; margin: 0 auto; }
+.suggestion-item { display: flex; gap: 15px; background: var(--bg-white); border: 1px solid var(--border-light); padding: 20px; border-radius: 12px; box-shadow: var(--shadow-sm); }
+.suggestion-item.info { border-left: 4px solid var(--primary); }
+.sug-icon { width: 48px; height: 48px; background: var(--primary-light); display: flex; align-items: center; justify-content: center; border-radius: 10px; font-size: 1.4rem; flex-shrink: 0; }
+.sug-text { font-size: 1rem; color: var(--text-main); line-height: 1.5; align-self: center; font-weight: 500; }
+.action-buttons { text-align: center; }
+.action-btn { background: var(--bg-white); border: 2px solid var(--primary); color: var(--primary); padding: 14px 32px; border-radius: 12px; font-size: 1rem; font-weight: 700; cursor: pointer; transition: all 0.3s; }
+.action-btn:hover { background: var(--primary); color: var(--white); box-shadow: var(--shadow-md); }
+
+.ai-voice-orb { position: fixed; bottom: 30px; right: 30px; width: 75px; height: 75px; z-index: 9998; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all 0.3s ease; }
+.ai-voice-orb.active { transform: scale(1.05); }
+.orb-core { position: absolute; width: 60px; height: 60px; background: var(--primary); border-radius: 50%; box-shadow: 0 4px 15px rgba(37, 99, 235, 0.4); transition: all 0.3s; display: flex; align-items: center; justify-content: center; }
+.ai-voice-orb:hover .orb-core { transform: scale(1.05); }
+.ai-voice-orb.listening .orb-core { background: var(--red-alert); box-shadow: 0 4px 20px rgba(239, 68, 68, 0.5); }
+.ai-voice-orb.processing .orb-core { background: var(--yellow); }
+.ai-voice-orb.speaking .orb-core { background: var(--primary-hover); animation: pulseCore 1.5s infinite alternate; }
+.orb-ring { position: absolute; border: 2px solid var(--primary-light); border-radius: 50%; transition: all 0.3s; }
+.orb-ring.r1 { width: 75px; height: 75px; border-color: rgba(37, 99, 235, 0.3); animation: orbSpin 4s linear infinite; border-top-color: transparent; }
+.ai-voice-orb.listening .orb-ring.r1 { border-color: rgba(239, 68, 68, 0.3); border-top-color: transparent; animation-duration: 1.5s; }
+.orb-icon { position: relative; z-index: 2; font-size: 1.8rem; color: var(--white); }
+
+.voice-panel { position: fixed; bottom: 120px; right: 30px; width: 380px; height: 500px; background: var(--bg-card); border: 1px solid var(--border-light); border-radius: 20px; z-index: 9998; display: none; flex-direction: column; box-shadow: var(--shadow-lg); overflow: hidden; }
+.voice-panel.active { display: flex; animation: slideUp 0.3s ease; }
+.vp-header { padding: 18px 20px; border-bottom: 1px solid var(--border-light); display: flex; justify-content: space-between; align-items: center; background: var(--bg-main); }
+.vp-header-left { display: flex; align-items: center; gap: 12px; }
+.vp-title { font-family: var(--font-head); color: var(--text-main); font-size: 1.2rem; font-weight: 700; }
+.vp-status-badge { font-size: 0.7rem; font-weight: 700; padding: 4px 10px; border-radius: 12px; background: var(--border-light); color: var(--text-muted); text-transform: uppercase; letter-spacing: 1px; }
+.vp-status-badge.listening { background: var(--red-light); color: var(--red-alert); }
+.vp-status-badge.processing { background: #fefce8; color: var(--yellow); }
+.vp-status-badge.speaking { background: var(--primary-light); color: var(--primary); }
+.vp-close { background: none; border: none; color: var(--text-muted); font-size: 1.4rem; cursor: pointer; transition: color 0.2s; }
+.vp-close:hover { color: var(--red-alert); }
+
+.vp-chat-area { flex: 1; overflow-y: auto; padding: 20px; display: flex; flex-direction: column; gap: 16px; scrollbar-width: thin; background: var(--bg-white); }
+.vp-welcome { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%; color: var(--text-muted); font-size: 0.95rem; text-align: center; font-weight: 500; }
+.vp-welcome-icon { font-size: 3rem; margin-bottom: 12px; }
+.v-msg { display: flex; flex-direction: column; max-width: 85%; animation: fadeInUp 0.3s ease forwards; }
+.v-msg.ai { align-self: flex-start; }
+.v-msg.user { align-self: flex-end; align-items: flex-end; }
+.v-msg-bubble { padding: 12px 16px; border-radius: 16px; font-size: 0.95rem; line-height: 1.5; font-weight: 500; }
+.v-msg.ai .v-msg-bubble { background: var(--bg-main); border: 1px solid var(--border-light); color: var(--text-main); border-bottom-left-radius: 4px; }
+.v-msg.user .v-msg-bubble { background: var(--primary); color: var(--white); border-bottom-right-radius: 4px; }
+.v-msg-time { font-size: 0.7rem; color: var(--text-muted); margin-top: 6px; }
+
+.typing-indicator { display: flex; gap: 4px; padding: 16px; background: var(--bg-main); border: 1px solid var(--border-light); border-radius: 16px; border-bottom-left-radius: 4px; width: fit-content; align-self: flex-start; }
+.typing-dot { width: 6px; height: 6px; background: var(--text-muted); border-radius: 50%; animation: typingBounce 1.4s infinite ease-in-out both; }
+.typing-dot:nth-child(1) { animation-delay: -0.32s; }
+.typing-dot:nth-child(2) { animation-delay: -0.16s; }
+
+.vp-interaction-zone { padding: 20px; border-top: 1px solid var(--border-light); display: flex; flex-direction: column; align-items: center; gap: 12px; background: var(--bg-main); }
+.vp-waveform { display: flex; gap: 4px; height: 30px; align-items: center; opacity: 0.2; transition: opacity 0.3s; }
+.vp-waveform.active { opacity: 1; }
+.vp-waveform span { width: 4px; height: 8px; background: var(--primary); border-radius: 2px; transition: height 0.1s; }
+.vp-waveform.active span { animation: wave 1s ease-in-out infinite; }
+.vp-waveform.active span:nth-child(2) { animation-delay: 0.1s; }
+.vp-waveform.active span:nth-child(3) { animation-delay: 0.2s; }
+.vp-waveform.active span:nth-child(4) { animation-delay: 0.3s; }
+.vp-waveform.active span:nth-child(5) { animation-delay: 0.4s; }
+.vp-status-text { font-size: 0.85rem; font-weight: 600; color: var(--text-muted); text-align: center; min-height: 20px; }
+
+.toast { position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%) translateY(100px); background: var(--text-main); color: var(--white); padding: 14px 28px; border-radius: 8px; font-weight: 500; font-size: 0.95rem; z-index: 99999; transition: transform 0.3s; box-shadow: var(--shadow-lg); pointer-events: none; }
+.toast.show { transform: translateX(-50%) translateY(0); }
+
+.location-container { max-width: 600px; margin: 30px auto; background: var(--bg-card); border: 1px solid var(--border-light); padding: 30px; border-radius: 20px; box-shadow: var(--shadow-md); text-align: center; border-top: 4px solid var(--primary); }
+.location-input-wrap { position: relative; display: flex; gap: 10px; margin-top: 20px; }
+.location-input { flex: 1; padding: 14px 20px; border: 1px solid var(--border-med); border-radius: 12px; font-family: var(--font-main); font-size: 1rem; outline: none; box-shadow: var(--shadow-sm); }
+.location-input:focus { border-color: var(--primary); }
+.btn-location { background: var(--primary); color: var(--white); border: none; padding: 14px 24px; border-radius: 12px; font-weight: 600; cursor: pointer; font-family: var(--font-main); display: inline-flex; align-items: center; gap: 8px; transition: background 0.2s; }
+.btn-location:hover { background: var(--primary-hover); }
+
+.radar-loader { position: relative; width: 100px; height: 100px; margin: 20px auto; display: none; }
+.radar-circle { position: absolute; width: 100%; height: 100%; border: 2px solid var(--primary-light); border-radius: 50%; }
+.radar-sweep { position: absolute; width: 100%; height: 100%; border-radius: 50%; border: 2px solid transparent; border-top-color: var(--primary); animation: orbSpin 1.5s linear infinite; }
+.radar-ping { position: absolute; top: 25%; left: 25%; width: 50%; height: 50%; background: var(--primary-glow); border-radius: 50%; animation: pulseDot 1s ease infinite; }
+
+.ecosystem-panel { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 24px; margin-top: 30px; }
+.eco-card { background: var(--bg-card); border: 1px solid var(--border-light); border-radius: 16px; padding: 24px; box-shadow: var(--shadow-sm); display: flex; flex-direction: column; gap: 16px; position: relative; overflow: hidden; transition: transform 0.3s, box-shadow 0.3s; }
+.eco-card:hover { transform: translateY(-4px); box-shadow: var(--shadow-lg); }
+.eco-card::before { content: ''; position: absolute; top: 0; left: 0; width: 4px; height: 100%; background: var(--primary); }
+.eco-card.pharmacy-card::before { background: var(--green); }
+.eco-card.med-card::before { background: var(--orange); }
+.eco-card.delivery-card::before { background: var(--yellow); }
+.eco-card.hospital-card::before { background: var(--red-alert); }
+
+.eco-header { display: flex; align-items: center; gap: 12px; border-bottom: 1px solid var(--border-light); padding-bottom: 12px; }
+.eco-avatar { width: 50px; height: 50px; background: var(--primary-light); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 1.5rem; font-weight: bold; color: var(--primary); }
+.pharmacy-card .eco-avatar { background: var(--green-light); color: var(--green); }
+.hospital-card .eco-avatar { background: var(--red-light); color: var(--red-alert); }
+.eco-meta { flex: 1; }
+.eco-name { font-size: 1.1rem; font-weight: 700; color: var(--text-main); }
+.eco-sub { font-size: 0.85rem; color: var(--text-muted); font-weight: 500; }
+.eco-badge-status { position: absolute; top: 20px; right: 20px; font-size: 0.7rem; font-weight: 700; padding: 4px 10px; border-radius: 50px; text-transform: uppercase; }
+.status-online { background: var(--green-light); color: var(--green); }
+.status-remote { background: #fff7ed; color: var(--orange); }
+
+.eco-details { font-size: 0.9rem; color: var(--text-main); display: flex; flex-direction: column; gap: 8px; font-weight: 500; }
+.eco-row { display: flex; justify-content: space-between; }
+.eco-lbl { color: var(--text-muted); }
+.eco-val { font-weight: 600; }
+
+.eco-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: auto; }
+.eco-btn { display: inline-flex; align-items: center; justify-content: center; gap: 8px; padding: 10px 14px; border-radius: 8px; font-size: 0.85rem; font-weight: 600; cursor: pointer; font-family: var(--font-main); transition: all 0.2s; text-decoration: none; text-align: center; }
+.eco-btn-outline { background: var(--bg-white); border: 1px solid var(--border-med); color: var(--text-main); }
+.eco-btn-outline:hover { border-color: var(--primary); color: var(--primary); background: var(--primary-light); }
+.eco-btn-filled { background: var(--primary); color: var(--white); border: none; }
+.eco-btn-filled:hover { background: var(--primary-hover); }
+.pharmacy-card .eco-btn-filled { background: var(--green); }
+.pharmacy-card .eco-btn-filled:hover { background: #059669; }
+.hospital-card .eco-btn-filled { background: var(--red-alert); }
+.hospital-card .eco-btn-filled:hover { background: #dc2626; }
+
+.med-list { display: flex; flex-direction: column; gap: 12px; }
+.med-item { background: var(--bg-main); border: 1px solid var(--border-light); padding: 14px; border-radius: 10px; display: flex; flex-direction: column; gap: 6px; }
+.med-title-row { display: flex; justify-content: space-between; align-items: center; font-weight: 700; }
+.med-name { color: var(--primary); font-size: 1rem; }
+.med-dose { font-size: 0.85rem; color: var(--text-main); font-weight: 600; }
+.med-instruction { font-size: 0.8rem; color: var(--text-muted); line-height: 1.4; }
+
+.med-links { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 8px; }
+.med-link-btn { text-decoration: none; display: inline-flex; align-items: center; gap: 6px; font-size: 0.75rem; font-weight: 700; padding: 6px 12px; border-radius: 6px; border: 1px solid var(--border-med); background: var(--bg-white); color: var(--text-main); transition: all 0.2s; }
+.med-link-btn:hover { border-color: var(--primary); background: var(--primary-light); color: var(--primary); }
+
+.disclaimer-box { background: #fffbeb; border: 1px solid #fef3c7; border-left: 4px solid var(--yellow); padding: 16px; border-radius: 12px; font-size: 0.85rem; color: #92400e; font-weight: 500; line-height: 1.5; text-align: left; margin-top: 16px; }
+
+.hologram-panel { border: 1px dashed var(--primary); background: linear-gradient(180deg, var(--primary-light) 0%, transparent 100%); border-radius: 16px; padding: 20px; text-align: center; margin-bottom: 24px; position: relative; }
+.hologram-pulse { width: 100%; height: 2px; background: linear-gradient(90deg, transparent, var(--primary), transparent); position: absolute; left: 0; animation: pulseMove 2.5s linear infinite; }
+.hologram-text { font-family: var(--font-mono); font-size: 0.85rem; color: var(--primary); font-weight: 600; letter-spacing: 1px; }
+
+@keyframes pulseDot { 0%,100% { opacity: 1; transform: scale(1); } 50% { opacity: 0.5; transform: scale(1.2); } }
+@keyframes orbSpin { 100% { transform: rotate(360deg); } }
+@keyframes pulseCore { from { transform: scale(1); box-shadow: 0 4px 15px rgba(37, 99, 235, 0.4); } to { transform: scale(1.1); box-shadow: 0 4px 25px rgba(37, 99, 235, 0.6); } }
+@keyframes wave { 0%,100% { height: 8px; } 50% { height: 24px; } }
+@keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+@keyframes drawLine { to { stroke-dashoffset: 0; } }
+@keyframes pulseMove { 0% { right: 100%; opacity: 0; } 10% { opacity: 1; } 90% { opacity: 1; } 100% { right: 0; opacity: 0; } }
+@keyframes fadeInUp { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+@keyframes typingBounce { 0%,80%,100% { transform: scale(0); } 40% { transform: scale(1); } }
+
+@media(max-width: 768px) {
+  .resq-nav { padding: 0 20px; }
+  .analysis-grid { grid-template-columns: 1fr; }
+  .hero-title .title-line2 { font-size: 2.8rem; }
+  .voice-panel { right: 10px; left: 10px; width: auto; bottom: 110px; }
+}
+</style>
+</head>
+<body>
+
+<nav class="resq-nav">
+  <div class="nav-brand">resq <span class="ai-badge">AI</span></div>
+  <div class="lang-selector">
+    <span class="lang-label">Language:</span>
+    <select id="appLang" onchange="changeLanguage()">
+      <option value="en" selected>English (Default)</option>
+      <option value="hi">हिंदी (Hindi)</option>
+      <option value="bn">বাংলা (Bengali)</option>
+    </select>
+  </div>
+</nav>
+
+<div class="emergency-status-badge">
+  <span class="status-dot"></span>
+  <span class="status-text">System Active</span>
+  <span class="divider">|</span>
+  <span class="monitor-text">AI Monitoring</span>
+</div>
+
+<div class="ai-voice-orb" id="aiVoiceOrb" onclick="handleOrbClick()">
+  <div class="orb-core"><div class="orb-icon">🎙️</div></div>
+  <div class="orb-ring r1"></div>
+</div>
+
+<div class="voice-panel" id="voicePanel">
+  <div class="vp-header">
+    <div class="vp-header-left">
+      <div class="vp-title">resq Assistant</div>
+      <div class="vp-status-badge" id="vpStatusBadge">Standby</div>
+    </div>
+    <button class="vp-close" onclick="closeVoicePanel()">✕</button>
+  </div>
+  
+  <div class="vp-chat-area" id="vpChatArea">
+    <div class="vp-welcome">
+      <div class="vp-welcome-icon">🤖</div>
+      <div>AI Voice Assessment Ready</div>
+    </div>
+  </div>
+
+  <div class="vp-interaction-zone">
+    <div class="vp-waveform" id="vpWaveform">
+      <span></span><span></span><span></span><span></span><span></span>
+    </div>
+    <div class="vp-status-text" id="vpStatusText" data-i18n="tap_to_speak">Tap the orb to speak</div>
+  </div>
+</div>
+
+<section class="hero" id="hero">
+  <div class="hero-bg-grid"></div>
+  <div class="hero-content">
+    <div class="hero-badge">RESQ AI SYSTEM v4.5</div>
+    <h1 class="hero-title">
+      <span class="title-line1">Intelligent</span>
+      <span class="title-line2">Emergency Triage</span>
+    </h1>
+    <p class="hero-subtitle">Smart Ambulance & Rapid Healthcare Coordination</p>
+    <div class="ecg-container">
+      <svg class="ecg-svg" viewBox="0 0 600 80" xmlns="http://www.w3.org/2000/svg">
+        <polyline class="ecg-line" points="0,40 60,40 80,40 100,10 115,70 130,5 145,65 160,35 180,40 240,40 260,40 280,10 295,70 310,5 325,65 340,35 360,40 420,40 440,40 460,10 475,70 490,5 505,65 520,35 540,40 600,40"/>
+      </svg>
+      <div class="ecg-pulse"></div>
+    </div>
+    <div class="hero-actions">
+      <button class="btn-primary" onclick="handleOrbClick()">
+        <span data-i18n="talk_btn">Talk to resq Assistant</span>
+        <span class="btn-arrow">🎙️</span>
+      </button>
+    </div>
+  </div>
+</section>
+
+<section class="symptoms-section" id="symptoms">
+  <div class="section-header">
+    <div class="section-tag">MANUAL OVERRIDE</div>
+    <h2 class="section-title">Select Emergency Symptom</h2>
+  </div>
+  <div class="symptoms-grid" id="symptomsGrid">
+    <div class="symptom-card" data-symptom="chest_pain" onclick="selectSymptom(this)">
+      <div class="card-icon">&#128147;</div>
+      <h3 class="card-title" data-i18n="chest_pain">Chest Pain</h3>
+      <div class="card-severity critical">CRITICAL</div>
+    </div>
+    <div class="symptom-card" data-symptom="bleeding" onclick="selectSymptom(this)">
+      <div class="card-icon">&#129656;</div>
+      <h3 class="card-title" data-i18n="bleeding">Heavy Bleeding</h3>
+      <div class="card-severity high">HIGH</div>
+    </div>
+    <div class="symptom-card" data-symptom="accident" onclick="selectSymptom(this)">
+      <div class="card-icon">&#128663;</div>
+      <h3 class="card-title" data-i18n="accident">Accident / Injury</h3>
+      <div class="card-severity high">HIGH</div>
+    </div>
+    <div class="symptom-card" data-symptom="breathing" onclick="selectSymptom(this)">
+      <div class="card-icon">&#129688;</div>
+      <h3 class="card-title" data-i18n="breathing">Breathing Problem</h3>
+      <div class="card-severity critical">CRITICAL</div>
+    </div>
+    <div class="symptom-card" data-symptom="stroke" onclick="selectSymptom(this)">
+      <div class="card-icon">&#129504;</div>
+      <h3 class="card-title" data-i18n="stroke">Stroke Symptoms</h3>
+      <div class="card-severity critical">CRITICAL</div>
+    </div>
+    <div class="symptom-card" data-symptom="fever" onclick="selectSymptom(this)">
+      <div class="card-icon">&#127777;</div>
+      <h3 class="card-title" data-i18n="fever">High Fever</h3>
+      <div class="card-severity moderate">MODERATE</div>
+    </div>
+  </div>
+</section>
+
+<section class="questions-section" id="questionsSection" style="display:none">
+  <div class="section-header">
+    <div class="section-tag">ASSESSMENT</div>
+    <h2 class="section-title" data-i18n="ai_assess_title">AI Assessment</h2>
+  </div>
+  <div class="questions-container" id="questionsContainer"></div>
+  <div class="questions-footer">
+    <button class="btn-analyze" onclick="analyzeEmergency()" data-i18n="run_analysis">
+      Run Final Analysis
+    </button>
+  </div>
+</section>
+
+<section class="analysis-section" id="analysisSection" style="display:none">
+  <div class="section-header">
+    <div class="section-tag">PROCESSING</div>
+    <h2 class="section-title">Severity Analysis</h2>
+  </div>
+  <div class="analysis-grid">
+    <div class="analysis-card severity-card">
+      <div class="severity-ring-wrap">
+        <svg class="severity-ring" viewBox="0 0 120 120">
+          <circle class="ring-bg" cx="60" cy="60" r="50"/>
+          <circle class="ring-fill" id="ringFill" cx="60" cy="60" r="50" stroke-dasharray="314" stroke-dashoffset="314"/>
+        </svg>
+        <div class="ring-inner">
+          <div class="ring-score" id="ringScore">0%</div>
+        </div>
+      </div>
+    </div>
+    <div class="analysis-card scan-card">
+      <div class="scan-data">
+        <div class="scan-row"><span>Neural Analysis</span><span class="scan-val" id="sv1">--</span></div>
+        <div class="scan-row"><span>Symptom Match</span><span class="scan-val" id="sv2">--</span></div>
+        <div class="scan-row"><span>Confidence</span><span class="scan-val" id="sv4">--</span></div>
+      </div>
+      <div class="emergency-level-badge" id="emergencyBadge">
+        <span class="badge-text" id="badgeText">Analyzing...</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="prediction-section" id="predictionSection" style="display:none">
+  <div class="section-header">
+    <div class="section-tag">DIAGNOSIS</div>
+    <h2 class="section-title">Recommendations</h2>
+  </div>
+  <div class="prediction-grid" id="predictionGrid"></div>
+  <div class="suggestions-container" id="suggestionsContainer"></div>
+  
+  <div class="location-container" id="locationCollectionBox">
+    <h3 style="font-family: var(--font-head); font-size: 1.5rem;" data-i18n="location_title">Location-Based Healthcare Scanning</h3>
+    <p style="font-size: 0.9rem; color: var(--text-muted); margin-top: 5px;" data-i18n="location_subtitle">Provide your location, village, hill station or pincode to check matching infrastructure.</p>
+    
+    <div class="radar-loader" id="radarLocator">
+      <div class="radar-circle"></div>
+      <div class="radar-sweep"></div>
+      <div class="radar-ping"></div>
+    </div>
+    
+    <div class="location-input-wrap">
+      <input type="text" id="geoLocInput" class="location-input" placeholder="Enter city, village, hill area or pin code..." />
+      <button class="btn-location" onclick="processLocationInfrastructure()">
+        <span data-i18n="scan_services">Scan Services</span> 🌐
+      </button>
+    </div>
+  </div>
+
+  <div id="ecosystemRecommendations" style="display:none; margin-top: 40px;">
+    <div class="hologram-panel">
+      <div class="hologram-pulse"></div>
+      <div class="hologram-text" id="hologramStatus">ECOSYSTEM CHANNELS SYNCHRONIZED BASED ON REGIONAL LOGISTICS</div>
+    </div>
+
+    <h3 style="font-family: var(--font-head); font-size: 1.8rem; margin-bottom: 10px;" data-i18n="nearby_docs">Recommended Medical Officers & Practitioners</h3>
+    <div class="ecosystem-panel" id="doctorContainer"></div>
+
+    <h3 style="font-family: var(--font-head); font-size: 1.8rem; margin-top: 40px; margin-bottom: 10px;">Recommended Hospitals & Emergency Rooms</h3>
+    <div class="ecosystem-panel" id="hospitalContainer"></div>
+
+    <h3 style="font-family: var(--font-head); font-size: 1.8rem; margin-top: 40px; margin-bottom: 10px;" data-i18n="nearby_pharmacies">Local Medical Dispensaries & Supplies</h3>
+    <div class="ecosystem-panel" id="pharmacyContainer"></div>
+
+    <h3 style="font-family: var(--font-head); font-size: 1.8rem; margin-top: 40px; margin-bottom: 10px;" data-i18n="med_guidance">Automated Preliminary Medication Formulations</h3>
+    <div class="ecosystem-panel" id="medicineContainer"></div>
+
+    <h3 style="font-family: var(--font-head); font-size: 1.8rem; margin-top: 40px; margin-bottom: 10px;" data-i18n="digital_channels">Digital Fulfillment Channels</h3>
+    <div class="ecosystem-panel" id="deliveryContainer"></div>
+  </div>
+
+  <div class="action-buttons" style="margin-top:50px; margin-bottom: 40px;">
+    <button class="action-btn" id="dispatchBtn" onclick="navigateToAmbulance()" data-i18n="dispatch_btn">Dispatch Ambulance Now</button>
+  </div>
+</section>
+
+<div class="toast" id="toast"></div>
+
+<script>
+/* =========================================================================
+   DYNAMIC HEALTHCARE DATA REGISTRY
+   This is the master database. You can add or modify names, phone numbers,
+   hospital capacities, and location settings here. It automatically maps 
+   to Kolkata's 5 major locations (behala, tollygunge, salt lake, new town, garia)
+   and remote rural/hill stations.
+   ========================================================================= */
+const HEALTHCARE_REGISTRY = {
+  kolkata: {
+    behala: {
+      doctors: [
+        { name: "Dr. Alok Banerjee", spec: "Cardiologist", rate: "4.9", dist: "0.8 km", fee: "₹600", hosp: "Behala Care Clinic", type: "Home Visit / In-Clinic", status: "Active Now", phone: "+919830012345", mapQuery: "Behala Care Clinic Kolkata" },
+        { name: "Dr. Pratik Saha", spec: "General Physician", rate: "4.7", dist: "1.4 km", fee: "₹400", hosp: "Vidyasagar Hospital Support", type: "In-Clinic Only", status: "Available", phone: "+919830054321", mapQuery: "Vidyasagar State General Hospital Behala" }
+      ],
+      hospitals: [
+        { name: "M.R. Bangur Hospital Node", rating: "4.5", dist: "2.3 km", beds: "14 ICU Beds Available", specialized: "Multi-Specialty Emergency Care", type: "Government General Node", phone: "+913324733900", mapQuery: "MR Bangur Hospital Tollygunge Kolkata" },
+        { name: "Behala Balananda Brahmachari Hospital", rating: "4.4", dist: "1.1 km", beds: "6 ICU Beds Available", specialized: "Trauma & General Medicine", type: "Private Trust Hospital", phone: "+913324072312", mapQuery: "Balananda Brahmachari Hospital Behala" }
+      ]
+    },
+    tollygunge: {
+      doctors: [
+        { name: "Dr. Sudipto Roy", spec: "Pulmonologist", rate: "4.8", dist: "1.1 km", fee: "₹700", hosp: "Tolly Medipoint Center", type: "Clinic & Teleconsult", status: "Active Now", phone: "+919831122334", mapQuery: "Tollygunge Medical Hall Kolkata" },
+        { name: "Dr. Manas Mitra", spec: "Neurologist", rate: "4.9", dist: "0.9 km", fee: "₹850", hosp: "Charu Market Specialty Hub", type: "Home Visit & Clinic", status: "On-Call", phone: "+919831155667", mapQuery: "Charu Market Kolkata" }
+      ],
+      hospitals: [
+        { name: "RSV Hospital", rating: "4.6", dist: "1.5 km", beds: "12 ICU Beds Available", specialized: "Stroke Unit & Cardiology Care", type: "Super Specialty Hub", phone: "+913330013000", mapQuery: "RSV Hospital Tollygunge Kolkata" },
+        { name: "M.R. Bangur Hospital", rating: "4.5", dist: "0.5 km", beds: "22 ICU Beds Available", specialized: "General & Critical Triage Ward", type: "Government Apex Clinic", phone: "+913324733900", mapQuery: "MR Bangur Hospital Kolkata" }
+      ]
+    },
+    salt_lake: {
+      doctors: [
+        { name: "Dr. Sukumar Mukherjee", spec: "General Physician", rate: "4.9", dist: "1.5 km", fee: "₹1000", hosp: "AMRI Hospital Salt Lake", type: "In-Clinic / Telemedicine", status: "Active Now", phone: "+919832299887", mapQuery: "AMRI Hospital Salt Lake Kolkata" },
+        { name: "Dr. Debashis Chowdhury", spec: "Neurologist", rate: "4.8", dist: "2.3 km", fee: "₹900", hosp: "Salt Lake Neurology Clinic", type: "In-Clinic Only", status: "Available", phone: "+919832244332", mapQuery: "Salt Lake Neurology Clinic Kolkata" }
+      ],
+      hospitals: [
+        { name: "AMRI Hospital Salt Lake", rating: "4.7", dist: "1.2 km", beds: "18 ICU Beds Available", specialized: "Critical Stroke & Neuro Care", type: "Private Multidisciplinary Center", phone: "+913323357710", mapQuery: "AMRI Hospital Salt Lake Kolkata" },
+        { name: "Columbia Asia Hospital", rating: "4.8", dist: "2.0 km", beds: "15 ICU Beds Available", specialized: "Advanced Trauma & Cardiac Care", type: "Super-Specialty Hospital Network", phone: "+913339898969", mapQuery: "Manipal Hospitals Salt Lake Kolkata" }
+      ]
+    },
+    new_town: {
+      doctors: [
+        { name: "Dr. Kunal Sarkar", spec: "Cardiologist", rate: "4.9", dist: "1.2 km", fee: "₹900", hosp: "Medica Hospital Support", type: "Emergency Home Consult", status: "Active Now", phone: "+919833344556", mapQuery: "Medica Superspecialty Hospital Kolkata" },
+        { name: "Dr. Swati Sen", spec: "General Physician", rate: "4.8", dist: "0.5 km", fee: "₹500", hosp: "New Town Health Node", type: "In-Clinic & Video Call", status: "Available Now", phone: "+919833377889", mapQuery: "New Town Clinic Kolkata" }
+      ],
+      hospitals: [
+        { name: "Tata Medical Center", rating: "4.9", dist: "2.4 km", beds: "35 Oncology & General ICU Beds", specialized: "Specialized Triage & Oncology", type: "National Super Specialty Node", phone: "+913366006000", mapQuery: "Tata Medical Center New Town Kolkata" },
+        { name: "Ohio Cardiology Hospital", rating: "4.6", dist: "1.8 km", beds: "10 ICU Beds Available", specialized: "Cardiac Emergency Response Team", type: "Private Clinical Center", phone: "+913366520000", mapQuery: "Ohio Hospital New Town Kolkata" }
+      ]
+    },
+    garia: {
+      doctors: [
+        { name: "Dr. Shubhadeep Roy", spec: "Orthopedic Surgeon", rate: "4.7", dist: "1.0 km", fee: "₹550", hosp: "Garia Medical Plaza", type: "In-Clinic Visit Only", status: "Available Now", phone: "+919834411223", mapQuery: "Garia Medical Store Kolkata" },
+        { name: "Dr. Anirban Ghosh", spec: "General Physician", rate: "4.8", dist: "2.1 km", fee: "₹450", hosp: "Peerless Hospital Auxiliary", type: "Home Visit & Teleconsult", status: "On-Call", phone: "+919834455667", mapQuery: "Peerless Hospital Garia Kolkata" }
+      ],
+      hospitals: [
+        { name: "Peerless Hospital & Research Center", rating: "4.7", dist: "1.8 km", beds: "28 ICU Beds Available", specialized: "Orthopedic Trauma & Pulmonary Triage", type: "Corporate Apex Hospital", phone: "+913340111222", mapQuery: "Peerless Hospital Kolkata" },
+        { name: "Hindusthan Health Point", rating: "4.4", dist: "1.2 km", beds: "8 ICU Beds Available", specialized: "General Triage & Accident Ward", type: "Regional General Hospital", phone: "+913324358826", mapQuery: "Hindusthan Health Point Garia" }
+      ]
+    }
+  },
+  generic: {
+    doctors: [
+      { name: "Dr. Anand Desai", spec: "General Practitioner", rate: "4.8", dist: "2.5 km", fee: "₹400", hosp: "Local District Clinic Node", type: "In-Clinic Visit", status: "Available Now", phone: "+919999999999", mapQuery: "District General Hospital" },
+      { name: "Dr. Sarah Williams", spec: "Consulting Specialist", rate: "4.7", dist: "4.2 km", fee: "₹450", hosp: "Regional Welfare Sub-Center", type: "Video / Telemedicine", status: "On-Call", phone: "+918888888888", mapQuery: "Community Health Center" }
+    ],
+    hospitals: [
+      { name: "District General Hospital Emergency Room", rating: "4.3", dist: "3.5 km", beds: "15 ICU Beds Available", specialized: "Primary Triage & Cardiac Support", type: "District Government Center", phone: "+913344556677", mapQuery: "District General Hospital" },
+      { name: "Mercy Trust General Ward", rating: "4.2", dist: "5.1 km", beds: "5 General Beds Available", specialized: "Basic Traumatic Management", type: "Charitable Trust Clinic", phone: "+913388990011", mapQuery: "Community Health Center" }
+    ]
+  },
+  remote: {
+    doctors: [
+      { name: "Dr. Karma Bhutia", spec: "Rural Health Director", rate: "4.8", dist: "1.1 km", fee: "₹250", hosp: "Primary Mountain Health Post", type: "Home Visit & Teleconsult", status: "Available Now", phone: "+917777788888", mapQuery: "Primary Health Center" },
+      { name: "Sister Mary Lepcha", spec: "Community Health Nurse", rate: "4.7", dist: "0.5 km", fee: "₹100", hosp: "Mobile Tribal Sub-Centre", type: "First-Response Home Care", status: "On-Call", phone: "+917777711111", mapQuery: "Community Clinic" }
+    ],
+    hospitals: [
+      { name: "Primary Rural Health Center", rating: "4.1", dist: "2.2 km", beds: "2 Basic Emergency Beds", specialized: "Oxygen Stabilization & Basic Trauma", type: "Rural Government Health Center", phone: "+917777722222", mapQuery: "Primary Health Center" },
+      { name: "State Mobile Health Van (Node #4)", rating: "4.3", dist: "0.3 km", beds: "Ambulatory Clinic Only", specialized: "Preliminary Antiseptic Recovery", type: "Government Mobile Outreach Service", phone: "+917777733333", mapQuery: "Community Clinic" }
+    ]
+  }
+};
+
+const i18n = {
+  en: {
+    chest_pain: "Chest Pain", bleeding: "Heavy Bleeding", accident: "Accident / Injury",
+    breathing: "Breathing Problem", stroke: "Stroke Symptoms", fever: "High Fever",
+    ai_greeting: "Hello, I am the resq Assistant. Please clearly describe your emergency.",
+    no_amb_needed: "Based on the assessment, an ambulance may not be strictly required.",
+    booking_prompt: "Would you like me to dispatch an ambulance to your location now?",
+    booking_prompt_anyway: "However, if you feel unsafe, would you like me to dispatch an ambulance anyway?",
+    booking_confirm: "Emergency dispatch initiated. A medical team is on the way. Please stay calm.",
+    fallback: "I didn't quite catch that. Could you please repeat?",
+    analysis_critical: "Critical emergency indicators detected. Please stand by for immediate support protocols.",
+    analysis_done: "Assessment complete. Analyzing your responses now...",
+    ack: ["I understand.", "Noted.", "Okay.", "Thank you. Let me ask another question."],
+    tap_to_speak: "Tap the orb to speak",
+    tap_to_reply: "Tap the orb to reply",
+    talk_btn: "Talk to resq Assistant",
+    ai_assess_title: "AI Assessment",
+    run_analysis: "Run Final Analysis",
+    dispatch_btn: "Dispatch Ambulance Now",
+    location_title: "Location-Based Healthcare Scanning",
+    location_subtitle: "Provide your location, village, hill station or pincode to check matching infrastructure.",
+    scan_services: "Scan Services",
+    nearby_docs: "Recommended Medical Officers & Practitioners",
+    nearby_pharmacies: "Local Medical Dispensaries & Supplies",
+    med_guidance: "Automated Preliminary Medication Formulations",
+    digital_channels: "Digital Fulfillment Channels",
+    share_loc_prompt: "Please share your location or village name so I can find nearby healthcare support."
+  },
+  hi: {
+    chest_pain: "छाती में दर्द", bleeding: "भारी रक्तस्राव", accident: "दुर्घटना / चोट",
+    breathing: "सांस लेने में समस्या", stroke: "स्ट्रोक के लक्षण", fever: "तेज बुखार",
+    ai_greeting: "नमस्ते, मैं रेस्क्यू (resq) असिस्टेंट हूँ। कृपया अपनी आपात स्थिति बताएं।",
+    no_amb_needed: "मूल्यांकन के आधार पर, एम्बुलेंस की सख्त आवश्यकता नहीं हो सकती है।",
+    booking_prompt: "क्या मैं आपके स्थान पर एम्बुलेंस भेज दूँ?",
+    booking_prompt_anyway: "हालाँकि, यदि आप असुरक्षित महसूस करते हैं, तो क्या आप फिर भी एम्बुलेंस बुलाना चाहेंगे?",
+    booking_confirm: "एम्बुलेंस भेजी जा रही है। मेडिकल टीम रास्ते में है, कृपया शांत रहें।",
+    fallback: "मुझे समझ नहीं आया। कृपया फिर से बोलें।",
+    analysis_critical: "गंभीर स्थिति के संकेत मिले हैं। कृपया तुरंत सहायता की प्रतीक्षा करें।",
+    analysis_done: "मूल्यांकन पूरा हुआ। मैं आपके उत्तरों का विश्लेषण कर रही हूँ...",
+    ack: ["समझ गई।", "ठीक है।", "धन्यवाद। एक और सवाल।"],
+    tap_to_speak: "बोलने के लिए ऑर्ब दबाएं",
+    tap_to_reply: "जवाब देने के लिए ऑर्ब दबाएं",
+    talk_btn: "रेस्क्यू असिस्टेंट से बात करें",
+    ai_assess_title: "एआई मूल्यांकन",
+    run_analysis: "अंतिम विश्लेषण चलाएं",
+    dispatch_btn: "अभी एम्बुलेंस भेजें",
+    location_title: "स्थान-आधारित स्वास्थ्य सेवा स्कैनिंग",
+    location_subtitle: "आस-पास के बुनियादी ढांचे की जांच के लिए अपना स्थान, गांव, हिल स्टेशन या पिनकोड दर्ज करें।",
+    scan_services: "सेवाएं स्कैन करें",
+    nearby_docs: "अनुशंसित चिकित्सा अधिकारी और चिकित्सक",
+    nearby_pharmacies: "स्थानीय चिकित्सा औषधालय और आपूर्ति",
+    med_guidance: "स्वचालित प्रारंभिक दवा नुस्खे",
+    digital_channels: "डिजिटल पूर्ति चैनल",
+    share_loc_prompt: "कृपया अपना स्थान या गाँव का नाम साझा करें ताकि मैं आस-पास की स्वास्थ्य सहायता ढूंढ सकूँ।"
+  },
+  bn: {
+    chest_pain: "বুকের ব্যথা", bleeding: "ভারী রক্তপাত", accident: "দুর্ঘটনা / আঘাত",
+    breathing: "শ্বাসকষ্ট", stroke: "স্ট্রোকের লক্ষণ", fever: "তীব্র জ্বর",
+    ai_greeting: "নমস্কার, আমি রেস্কিউ (resq) অ্যাসিস্ট্যান্ট। আপনার জরুরি অবস্থা সম্পর্কে বলুন।",
+    no_amb_needed: "মূল্যায়নের ভিত্তিতে, অ্যাম্বুলেন্সের খুব একটা প্রয়োজন নাও হতে পারে।",
+    booking_prompt: "আমি কি এখন আপনার ঠিকানায় অ্যাম্বুলেন্স পাঠাবো?",
+    booking_prompt_anyway: "তা সত্ত্বেও, আপনি যদি অনিরাপদ বোধ করেন, আপনি কি অ্যাম্বুলেন্স ডাকতে চান?",
+    booking_confirm: "অ্যাম্বুলেন্স পাঠানো হচ্ছে। মেডিকেল টিম পথে আছে, শান্ত থাকুন।",
+    fallback: "আমি বুঝতে পারিনি। অনুগ্রহ করে আবার বলুন।",
+    analysis_critical: "গুরুতর অবস্থার লক্ষণ পাওয়া গেছে। সহায়তার জন্য অপেক্ষা করুন।",
+    analysis_done: "তথ্য সংগ্রহ সম্পূর্ণ। আপনার উত্তর বিশ্লেষণ করা হচ্ছে...",
+    ack: ["বুঝেছি।", "ঠিক আছে।", "ধন্যবাদ। আরেকটি প্রশ্ন করছি।"],
+    tap_to_speak: "কথা বলতে অর্বে ট্যাপ করুন",
+    tap_to_reply: "উত্তর দিতে অর্বে ট্যাপ করুন",
+    talk_btn: "রেস্কিউ অ্যাসিস্ট্যান্টের সাথে কথা বলুন",
+    ai_assess_title: "এআই মূল্যায়ন",
+    run_analysis: "চূড়ান্ত বিশ্লেষণ চালান",
+    dispatch_btn: "এখনই অ্যাম্বুলেন্স পাঠান",
+    location_title: "অবস্থান-ভিত্তিক স্বাস্থ্যসেবা স্ক্যানিং",
+    location_subtitle: "নিকটবর্তী স্বাস্থ্য পরিকাঠামো পরীক্ষা করতে আপনার অবস্থান, গ্রাম, হিল স্টেশন বা পিনকোড দিন।",
+    scan_services: "পরিষেবা স্ক্যান করুন",
+    nearby_docs: "প্রস্তাবিত চিকিৎসক এবং মেডিকেল অফিসার",
+    nearby_pharmacies: "স্থানীয় ঔষধালয় এবং চিকিৎসা সরবরাহ",
+    med_guidance: "স্বয়ংক্রিয় প্রাথমিক ঔষধ নির্দেশিকা",
+    digital_channels: "ডিজিটাল ডেলিভারি মাধ্যম",
+    share_loc_prompt: "অনুগ্রহ করে আপনার অবস্থান বা গ্রামের নাম জানান যাতে আমি কাছাকাছি স্বাস্থ্যসেবা খুঁজে পেতে পারি।"
+  }
+};
+
+const emergencyData = {
+  chest_pain: {
+    label: { en: "Chest Pain", hi: "छाती में दर्द", bn: "বুকের ব্যথা" },
+    specialist: "Cardiologist",
+    questions: [
+      { 
+        id: "breathing", 
+        text: { en: "Are you having difficulty breathing?", hi: "क्या आपको सांस लेने में तकलीफ हो रही है?", bn: "আপনার কি শ্বাস নিতে কষ্ট হচ্ছে?" },
+        options: [
+          { val: "Yes, severe", label: { en: "Yes, severe", hi: "हाँ, गंभीर", bn: "হ্যাঁ, তীব্র" } },
+          { val: "Yes, mild", label: { en: "Yes, mild", hi: "हाँ, हल्का", bn: "হ্যাঁ, সামান্য" } },
+          { val: "No", label: { en: "No", hi: "नहीं", bn: "না" } }
+        ] 
+      },
+      { 
+        id: "sweating", 
+        text: { en: "Are you sweating heavily or feeling dizzy?", hi: "क्या आपको पसीना आ रहा है या चक्कर आ रहे हैं?", bn: "আপনার কি ঘাম হচ্ছে বা মাথা ঘুরছে?" },
+        options: [
+          { val: "Yes, profuse", label: { en: "Yes, heavily", hi: "हाँ, बहुत ज्यादा", bn: "হ্যাঁ, প্রচুর" } },
+          { val: "Yes, slight", label: { en: "Yes, slight", hi: "हाँ, थोड़ा", bn: "হ্যাঁ, সামান্য" } },
+          { val: "No", label: { en: "No", hi: "नहीं", bn: "না" } }
+        ] 
+      },
+      { 
+        id: "arm_pain", 
+        text: { en: "Is the pain radiating to your left arm or jaw?", hi: "क्या दर्द आपके बाएँ हाथ या जबड़े तक जा रहा है?", bn: "ব্যথা কি আপনার বাম হাত বা চোয়ালে ছড়াচ্ছে?" },
+        options: [
+          { val: "Yes, strongly", label: { en: "Yes, strongly", hi: "हाँ, बहुत ज्यादा", bn: "হ্যাঁ, প্রবলভাবে" } },
+          { val: "Somewhat", label: { en: "Somewhat", hi: "कुछ हद तक", bn: "কিছুটা" } },
+          { val: "No", label: { en: "No", hi: "नहीं", bn: "না" } }
+        ] 
+      },
+      { 
+        id: "onset", 
+        text: { en: "Did this pain start suddenly?", hi: "क्या यह दर्द अचानक शुरू हुआ?", bn: "এই ব্যথা কি হঠাৎ শুরু হয়েছে?" },
+        options: [
+          { val: "Very suddenly", label: { en: "Very suddenly", hi: "अचानक", bn: "খুব হঠাৎ" } },
+          { val: "Gradually", label: { en: "Gradually", hi: "धीरे-धीरे", bn: "ধীরে ধীরে" } },
+          { val: "Unsure", label: { en: "Unsure", hi: "पता नहीं", bn: "নিশ্চিত নই" } }
+        ] 
+      },
+      { 
+        id: "history", 
+        text: { en: "Do you have a history of heart issues?", hi: "क्या आपको पहले से दिल की बीमारी है?", bn: "আপনার কি আগে থেকে হার্টের সমস্যা আছে?" },
+        options: [
+          { val: "Yes", label: { en: "Yes", hi: "हाँ", bn: "হ্যাঁ" } },
+          { val: "Not sure", label: { en: "Not sure", hi: "पता नहीं", bn: "নিশ্চিত নই" } },
+          { val: "No", label: { en: "No", hi: "नहीं", bn: "না" } }
+        ] 
+      }
+    ],
+    predictions: {
+      high: { condition: "Cardiac Emergency", severity: "Critical", ambulance: "Cardiac ICU Ambulance", confidence: 96 },
+      low: { condition: "Non-Cardiac Chest Pain / Angina", severity: "Moderate", ambulance: "Basic Oxygen Ambulance", confidence: 82 }
+    },
+    suggestions: [
+      { icon: "🩺", text: { en: "Have the patient sit upright and avoid lying completely flat.", hi: "मरीज को सीधा बिठाएं और पूरी तरह से लेटने से बचें।", bn: "রোগীকে সোজা হয়ে বসান এবং পুরোপুরি শুয়ে থাকা এড়িয়ে চলুন।" } },
+      { icon: "💊", text: { en: "Loosen any tight clothing around the neck and chest.", hi: "गर्दन and छाती के आसपास के किसी भी तंग कपड़े को ढीला करें।", bn: "ঘাড় এবং বুকের চারপাশে কোনো আঁটসাঁট পোশাক আলগা করুন।" } }
+    ],
+    medicines: [
+      { name: "Sorbitrate 5mg", dosage: "1 Tablet sublingually", instruction: "Keep under the tongue. Do not swallow directly without medical review.", hydration: "Avoid consuming large amounts of fluids immediately." },
+      { name: "Aspirin 300mg", dosage: "1 Tablet chewable", instruction: "Chew immediately to accelerate absorption path.", hydration: "Sip nominal water if mouth is excessively dry." }
+    ]
+  },
+  bleeding: {
+    label: { en: "Heavy Bleeding", hi: "भारी रक्तस्राव", bn: "ভারী রক্তপাত" },
+    specialist: "Trauma Surgeon / Orthopedic",
+    questions: [
+      { 
+        id: "blood_loss", 
+        text: { en: "Is the bleeding massive and uncontrollable?", hi: "क्या खून बहना बहुत ज्यादा है और रुक नहीं रहा?", bn: "রক্তপাত কি অনেক বেশি এবং থামছে না?" },
+        options: [
+          { val: "Massive", label: { en: "Massive", hi: "बहुत ज्यादा", bn: "প্রচুর" } },
+          { val: "Moderate", label: { en: "Moderate", hi: "मध्यम", bn: "মাঝারি" } },
+          { val: "Minor", label: { en: "Minor", hi: "मामूली", bn: "সামান্য" } }
+        ] 
+      },
+      { 
+        id: "location", 
+        text: { en: "Where exactly is the bleeding coming from?", hi: "खून ठीक कहाँ से बह रहा है?", bn: "রক্ত ঠিক কোথা থেকে বেরোচ্ছে?" },
+        options: [
+          { val: "Head/Neck", label: { en: "Head or Neck", hi: "सिर या गर्दन", bn: "মাথা বা ঘাড়" } },
+          { val: "Torso/Abdomen", label: { en: "Torso or Abdomen", hi: "ধড় বা পেট", bn: "ধড় বা পেট" } },
+          { val: "Limbs", label: { en: "Limbs", hi: "हाथ या पैर", bn: "হাত বা পা" } }
+        ] 
+      },
+      { 
+        id: "spurt", 
+        text: { en: "Is the blood pulsing or spurting out?", hi: "क्या खून तेजी से फव्वारे की तरह निकल रहा है?", bn: "রক্ত কি স্পন্দিত হয়ে বের হচ্ছে?" },
+        options: [
+          { val: "Yes, spurting", label: { en: "Yes, spurting", hi: "हाँ, फव्वारे की तरह", bn: "হ্যাঁ, স্পন্দিত" } },
+          { val: "Flowing steadily", label: { en: "Flowing steadily", hi: "लगातार बह रहा है", bn: "অবিরাম বইছে" } },
+          { val: "Oozing", label: { en: "Oozing slightly", hi: "হালকা বহ रहा है", bn: "হালকা বেরোচ্ছে" } }
+        ] 
+      },
+      { 
+        id: "dizzy", 
+        text: { en: "Is the patient feeling very dizzy?", hi: "क्या मरीज को बहुत चक्कर आ रहे हैं?", bn: "রোগীর কি খুব মাথা ঘুরছে?" },
+        options: [
+          { val: "Yes, very dizzy", label: { en: "Yes, very dizzy", hi: "हाँ, बहुत चक्कर", bn: "হ্যাঁ, খুব ঘুরছে" } },
+          { val: "Slightly", label: { en: "Slightly", hi: "थोड़ा सा", bn: "একটু" } },
+          { val: "No", label: { en: "No", hi: "नहीं", bn: "না" } }
+        ] 
+      },
+      { 
+        id: "meds", 
+        text: { en: "Is the patient on any blood thinners?", hi: "क्या मरीज खून पतला करने की दवा लेता है?", bn: "রোগী কি রক্ত পাতলা করার ওষুধ খান?" },
+        options: [
+          { val: "Yes", label: { en: "Yes", hi: "हाँ", bn: "হ্যাঁ" } },
+          { val: "Unsure", label: { en: "Unsure", hi: "पता नहीं", bn: "নিশ্চিত নই" } },
+          { val: "No", label: { en: "No", hi: "नहीं", bn: "না" } }
+        ] 
+      }
+    ],
+    predictions: {
+      high: { condition: "Severe Hemorrhage", severity: "Critical", ambulance: "Trauma ICU Ambulance", confidence: 94 },
+      low: { condition: "Controlled Laceration", severity: "Moderate", ambulance: "Basic First-Aid Ambulance", confidence: 88 }
+    },
+    suggestions: [
+      { icon: "🩸", text: { en: "Apply firm, continuous direct pressure to the wound using a clean cloth.", hi: "साफ कपड़े का उपयोग करके घाव पर लगातार सीधा दबाव डालें।", bn: "একটি পরিষ্কার কাপড় ব্যবহার করে ক্ষতের উপর অবিচ্ছিন্ন সোজা চাপ প্রয়োগ করুন।" } },
+      { icon: "🛌", text: { en: "Elevate the injured area above the level of the heart if possible.", hi: "यदि संभव हो तो घायल हिस्से को हृदय के स्तर से ऊपर उठाएं।", bn: "সম্ভব হলে আহত স্থানটিকে হৃদপিন্ডের স্তরের উপরে তুলুন।" } }
+    ],
+    medicines: [
+      { name: "Tranexamic Acid 500mg", dosage: "Consult Emergency Technician", instruction: "Used primarily for stabilization under strict operational validation.", hydration: "Keep nil by mouth if surgical deployment is anticipated." }
+    ]
+  },
+  breathing: {
+    label: { en: "Breathing Problem", hi: "सांस लेने में समस्या", bn: "শ্বাসকষ্ট" },
+    specialist: "Pulmonologist",
+    questions: [
+      { 
+        id: "severity_q", 
+        text: { en: "Is it severely difficult to breathe right now?", hi: "क्या अभी सांस लेना बहुत मुश्किल है?", bn: "এখন কি শ্বাস নিতে খুব কষ্ট হচ্ছে?" },
+        options: [
+          { val: "Severe (gasping)", label: { en: "Severe (gasping)", hi: "गंभीर (हांफना)", bn: "তীব্র (হাঁপানো)" } },
+          { val: "Labored", label: { en: "Labored", hi: "कठिनाई से", bn: "কঠিন" } },
+          { val: "Mild", label: { en: "Mild", hi: "हल्का", bn: "মৃদু" } }
+        ] 
+      },
+      { 
+        id: "color", 
+        text: { en: "Are the patient's lips turning pale or blue?", hi: "क्या होंठ नीले या पीले पड़ रहे हैं?", bn: "ঠোঁট কি নীল বা ফ্যাকাশে হয়ে যাচ্ছে?" },
+        options: [
+          { val: "Blue/Cyanotic", label: { en: "Blue", hi: "नीले", bn: "নীল" } },
+          { val: "Pale", label: { en: "Pale", hi: "पीले", bn: "ফ্যাকাশে" } },
+          { val: "Normal color", label: { en: "Normal", hi: "सामान्य", bn: "স্বাভাবিক" } }
+        ] 
+      },
+      { 
+        id: "cough", 
+        text: { en: "Are they coughing up blood or froth?", hi: "क्या खांसी में खून या झाग आ रहा है?", bn: "কাশিতে কি রক্ত বা ফেনা উঠছে?" },
+        options: [
+          { val: "Yes", label: { en: "Yes", hi: "हाँ", bn: "হ্যাঁ" } },
+          { val: "Dry cough only", label: { en: "Dry cough only", hi: "सूखी खांसी", bn: "শুধু শুকনো কাশি" } },
+          { val: "No cough", label: { en: "No cough", hi: "खांसी नहीं", bn: "কাশি নেই" } }
+        ] 
+      },
+      { 
+        id: "chest_tight", 
+        text: { en: "Is there tightness in the chest?", hi: "क्या छाती में जकड़न महसूस हो रही है?", bn: "বুকে কি চাপ অনুভব করছেন?" },
+        options: [
+          { val: "Severe tightness", label: { en: "Severe", hi: "गंभीर", bn: "তীব্র" } },
+          { val: "Mild tightness", label: { en: "Mild", hi: "हल्का", bn: "মৃদু" } },
+          { val: "No", label: { en: "No", hi: "नहीं", bn: "না" } }
+        ] 
+      },
+      { 
+        id: "history_resp", 
+        text: { en: "Does the patient have asthma or COPD?", hi: "क्या मरीज को अस्थमा है?", bn: "রোগীর কি হাঁপানি আছে?" },
+        options: [
+          { val: "Yes", label: { en: "Yes", hi: "हाँ", bn: "হ্যাঁ" } },
+          { val: "Unsure", label: { en: "Unsure", hi: "पता नहीं", bn: "নিশ্চিত নই" } },
+          { val: "No", label: { en: "No", hi: "नहीं", bn: "না" } }
+        ] 
+      }
+    ],
+    predictions: {
+      high: { condition: "Acute Respiratory Failure", severity: "Critical", ambulance: "Oxygen ICU Ambulance", confidence: 95 },
+      low: { condition: "Mild Respiratory Distress", severity: "Moderate", ambulance: "Basic Oxygen Ambulance", confidence: 85 }
+    },
+    suggestions: [
+      { icon: "🫁", text: { en: "Help the patient sit in a comfortable, upright position.", hi: "मरीज को आरामदायक, सीधी स्थिति में बैठने में मदद करें।", bn: "রোগীকে আরামদায়কভাবে সোজা হয়ে বসতে সাহায্য করুন।" } },
+      { icon: "💨", text: { en: "Assist them with their prescribed inhaler if available.", hi: "यदि उपलब्ध हो तो उन्हें उनके निर्धारित इनहेलर के साथ सहायता करें।", bn: "উপলব্ধ থাকলে তাদের নির্ধারিত ইনহেলার দিয়ে সাহায্য করুন।" } }
+    ],
+    medicines: [
+      { name: "Salbutamol Inhaler", dosage: "1-2 Puffs if prescribed", instruction: "Shake well, exhale fully before compressing the canister mechanism.", hydration: "Rinse mouth thoroughly with lukewarm water post-delivery." },
+      { name: "Cetirizine 10mg", dosage: "1 Tablet if allergic triggers exist", instruction: "Take only if stable enough to safely consume oral dose.", hydration: "Consume with a standard glass of fresh water." }
+    ]
+  },
+  accident: {
+    label: { en: "Accident / Injury", hi: "दुर्घटना / चोट", bn: "দুর্ঘটনা / আঘাত" },
+    specialist: "Orthopedic Surgeon",
+    questions: [
+      { 
+        id: "consciousness", 
+        text: { en: "Is the injured person fully conscious?", hi: "क्या मरीज पूरी तरह होश में है?", bn: "রোগী কি সম্পূর্ণ সজ্ঞানে আছেন?" },
+        options: [
+          { val: "Unconscious", label: { en: "Unconscious", hi: "बेहोश", bn: "অজ্ঞান" } },
+          { val: "Confused", label: { en: "Confused", hi: "भ्रमित", bn: "বিভ্রান্ত" } },
+          { val: "Fully conscious", label: { en: "Fully conscious", hi: "होश में", bn: "সজ্ঞানে" } }
+        ] 
+      },
+      { 
+        id: "head_neck", 
+        text: { en: "Are there signs of a head or neck injury?", hi: "क्या सिर या गर्दन में चोट लगी है?", bn: "মাথা বা ঘাড়ে কি আঘাত লেগেছে?" },
+        options: [
+          { val: "Yes, clear signs", label: { en: "Yes", hi: "हाँ", bn: "হ্যাঁ" } },
+          { val: "Possible", label: { en: "Possible", hi: "शायद", bn: "সম্ভবত" } },
+          { val: "No", label: { en: "No", hi: "नहीं", bn: "না" } }
+        ] 
+      },
+      { 
+        id: "movement", 
+        text: { en: "Can they move their limbs normally?", hi: "क्या वे हाथ-पैर सामान्य रूप से हिला पा रहे हैं?", bn: "তারা কি হাত-পা স্বাভাবিকভাবে নাড়তে পারছেন?" },
+        options: [
+          { val: "Cannot move", label: { en: "Cannot move", hi: "हिला नहीं पा रहे", bn: "নাড়তে পারছেন না" } },
+          { val: "Moves with pain", label: { en: "Moves with pain", hi: "दर्द के साथ", bn: "ব্যথার সাথে" } },
+          { val: "Moves normally", label: { en: "Moves normally", hi: "सामान्य", bn: "স্বাভাবিক" } }
+        ] 
+      },
+      { 
+        id: "bleeding_acc", 
+        text: { en: "Is there severe bleeding?", hi: "क्या बहुत अधिक खून बह रहा है?", bn: "অনেক বেশি রক্তপাত হচ্ছে কি?" },
+        options: [
+          { val: "Massive bleeding", label: { en: "Massive bleeding", hi: "बहुत ज्यादा", bn: "প্রচুর রক্তপাত" } },
+          { val: "Minor cuts", label: { en: "Minor cuts", hi: "मामूली चोट", bn: "সামান্য কাটা" } },
+          { val: "No bleeding", label: { en: "No bleeding", hi: "खून नहीं", bn: "রক্তপাত নেই" } }
+        ] 
+      },
+      { 
+        id: "bone", 
+        text: { en: "Are there visible broken bones?", hi: "क्या कोई हड्डी टूटी हुई दिख रही है?", bn: "কোনো ভাঙা হাড় দেখা যাচ্ছে কি?" },
+        options: [
+          { val: "Yes", label: { en: "Yes", hi: "हाँ", bn: "হ্যাঁ" } },
+          { val: "Unsure", label: { en: "Unsure", hi: "पता नहीं", bn: "নিশ্চিত নই" } },
+          { val: "No", label: { en: "No", hi: "नहीं", bn: "না" } }
+        ] 
+      }
+    ],
+    predictions: {
+      high: { condition: "Severe Multi-system Trauma", severity: "Critical", ambulance: "Advanced Trauma Ambulance", confidence: 91 },
+      low: { condition: "Minor Musculoskeletal Injury", severity: "Moderate", ambulance: "Basic Ambulance", confidence: 86 }
+    },
+    suggestions: [
+      { icon: "⚠️", text: { en: "CRITICAL: Do not move the patient unless they are in immediate danger.", hi: "गंभीर: मरीज को तब तक न हिलाएं जब तक वे तत्काल खतरे में न हों।", bn: "জরুরী: রোগীকে সরাবেন না যদি না তারা তাৎক্ষণিক বিপদে থাকে।" } },
+      { icon: "🩸", text: { en: "Control any visible, heavy bleeding with direct pressure.", hi: "दबाव डालकर भारी रक्तस्राव को रोकें।", bn: "চাপ প্রয়োগ করে ভারী রক্তপাত নিয়ন্ত্রণ করুন।" } }
+    ],
+    medicines: [
+      { name: "Paracetamol 650mg", dosage: "1 Tablet for trauma pain", instruction: "Administer only if subject exhibits fluent swallowing capacities.", hydration: "Take with 150ml clean drinking water." }
+    ]
+  },
+  stroke: {
+    label: { en: "Stroke Symptoms", hi: "स्ट्रोक के लक्षण", bn: "স্ট্রোকের লক্ষণ" },
+    specialist: "Neurologist",
+    questions: [
+      { 
+        id: "face", 
+        text: { en: "Is one side of the face drooping?", hi: "क्या चेहरे का एक हिस्सा लटक रहा है?", bn: "মুখের একপাশ কি ঝুলে গেছে?" },
+        options: [
+          { val: "Yes, noticeable", label: { en: "Yes, noticeably", hi: "हाँ, स्पष्ट रूप से", bn: "হ্যাঁ, লক্ষণীয়ভাবে" } },
+          { val: "Slightly", label: { en: "Slightly", hi: "थोड़ा सा", bn: "সামান্য" } },
+          { val: "No", label: { en: "No", hi: "नहीं", bn: "না" } }
+        ] 
+      },
+      { 
+        id: "arms", 
+        text: { en: "Is there sudden weakness in the arms?", hi: "क्या अचानक हाथ में कमजोरी आ गई है?", bn: "হাতে কি হঠাৎ দুর্বলতা এসেছে?" },
+        options: [
+          { val: "Cannot raise one/both", label: { en: "Cannot raise", hi: "उठा नहीं पा रहे", bn: "তুলতে পারছেন না" } },
+          { val: "Weakness in one", label: { en: "Weakness in one", hi: "एक में कमजोरी", bn: "এক হাতে দুর্বলতা" } },
+          { val: "Normal movement", label: { en: "Normal", hi: "सामान्य", bn: "স্বাভাবিক" } }
+        ] 
+      },
+      { 
+        id: "speech", 
+        text: { en: "Is their speech slurred?", hi: "क्या बोलने में लड़खड़ाहट है?", bn: "কথা কি জড়িয়ে যাচ্ছে?" },
+        options: [
+          { val: "Slurred/Muted", label: { en: "Slurred/Muted", hi: "लड़खड़ाहट", bn: "জড়িয়ে যাচ্ছে" } },
+          { val: "Slightly strange", label: { en: "Slightly strange", hi: "थोड़ा अजीब", bn: "একটু অদ্ভুত" } },
+          { val: "Normal", label: { en: "Normal", hi: "सामान्य", bn: "স্বাভাবিক" } }
+        ] 
+      },
+      { 
+        id: "vision", 
+        text: { en: "Is there sudden loss of vision?", hi: "क्या दृष्टि में अचानक कमी आई है?", bn: "দৃষ্টিশক্তি কি হঠাৎ কমে গেছে?" },
+        options: [
+          { val: "Yes, sudden loss", label: { en: "Yes", hi: "हाँ", bn: "হ্যাঁ" } },
+          { val: "Blurry", label: { en: "Blurry", hi: "धुंधला", bn: "ঝাপসা" } },
+          { val: "No", label: { en: "No", hi: "नहीं", bn: "না" } }
+        ] 
+      },
+      { 
+        id: "balance", 
+        text: { en: "Have they lost balance and cannot walk?", hi: "क्या संतुलन बिगड़ गया है?", bn: "তারা কি ভারসাম্য হারিয়েছেন?" },
+        options: [
+          { val: "Yes, unable to walk", label: { en: "Yes", hi: "हाँ", bn: "হ্যাঁ" } },
+          { val: "Dizzy", label: { en: "Dizzy", hi: "चक्कर", bn: "মাথা ঘোরা" } },
+          { val: "Normal balance", label: { en: "Normal", hi: "सामान्य", bn: "স্বাভাবিক" } }
+        ] 
+      }
+    ],
+    predictions: {
+      high: { condition: "Acute Stroke (CVA)", severity: "Critical", ambulance: "Neurology ICU Ambulance", confidence: 97 },
+      low: { condition: "Transient Ischemic Attack (TIA)", severity: "High", ambulance: "Advanced Life Support", confidence: 84 }
+    },
+    suggestions: [
+      { icon: "⏱️", text: { en: "Time is brain. Note the exact time these symptoms first started.", hi: "समय बहुत महत्वपूर्ण है। लक्षण शुरू होने का सटीक समय नोट करें।", bn: "সময় খুব গুরুত্বপূর্ণ। লক্ষণগুলি শুরু হওয়ার সঠিক সময় নোট করুন।" } },
+      { icon: "🛌", text: { en: "Keep the patient calm and lying down safely. Do not give them food or water.", hi: "मरीज को शांत और सुरक्षित रूप से लिटाए रखें। उन्हें खाना या पानी न दें।", bn: "রোগীকে শান্ত রাখুন এবং নিরাপদে শুইয়ে রাখুন। তাদের খাবার বা জল দেবেন না।" } }
+    ],
+    medicines: [
+      { name: "Emergency Infrastructure Routing", dosage: "Zero Oral Intake", instruction: "Do not give any aspirin or fluids until neurological imaging is run.", hydration: "Strictly avoid liquid mechanics due to aspiration dangers." }
+    ]
+  },
+  fever: {
+    label: { en: "High Fever", hi: "तेज बुखार", bn: "তীব্র জ্বর" },
+    specialist: "General Physician",
+    questions: [
+      { 
+        id: "temp", 
+        text: { en: "Is the fever over 103 degrees?", hi: "क्या बुखार 103 डिग्री से ज्यादा है?", bn: "জ্বর কি ১০৩ ডিগ্রির বেশি?" },
+        options: [
+          { val: "Over 103°F", label: { en: "Over 103°F", hi: "103°F से अधिक", bn: "১০৩°F এর বেশি" } },
+          { val: "101°F - 102°F", label: { en: "101°F - 102°F", hi: "101°F - 102°F", bn: "১০১°F - ১০২°F" } },
+          { val: "Under 100°F", label: { en: "Under 100°F", hi: "100°F से कम", bn: "১০০°F এর কম" } }
+        ] 
+      },
+      { 
+        id: "neck", 
+        text: { en: "Do they have a very stiff neck?", hi: "क्या गर्दन में बहुत अकड़न है?", bn: "ঘাড়ে কি খুব আড়ষ্টতা আছে?" },
+        options: [
+          { val: "Yes, severe", label: { en: "Yes, severe", hi: "हाँ, बहुत ज्यादा", bn: "হ্যাঁ, খুব" } },
+          { val: "Mild stiffness", label: { en: "Mild stiffness", hi: "হালকি আকড়ন", bn: "হালকা আড়ষ্টতা" } },
+          { val: "No", label: { en: "No", hi: "नहीं", bn: "না" } }
+        ] 
+      },
+      { 
+        id: "rash", 
+        text: { en: "Has a new rash appeared on the body?", hi: "क्या शरीर पर कोई नया दाना या चकत्ता आया है?", bn: "শরীরে কি নতুন কোনো ফুসকুড়ি দেখা দিয়েছে?" },
+        options: [
+          { val: "Yes, spreading", label: { en: "Yes, spreading", hi: "हाँ, फैल रहा है", bn: "হ্যাঁ, ছড়াচ্ছে" } },
+          { val: "Small spots", label: { en: "Small spots", hi: "छोटे धब्बे", bn: "ছোট দাগ" } },
+          { val: "No rash", label: { en: "No", hi: "नहीं", bn: "না" } }
+        ] 
+      },
+      { 
+        id: "alertness", 
+        text: { en: "Are they confused or hard to wake up?", hi: "क्या वे भ्रमित हैं या जागने में मुश्किल हो रही है?", bn: "তারা কি বিভ্রান্ত বা জাগানো কঠিন হচ্ছে?" },
+        options: [
+          { val: "Difficult to wake", label: { en: "Difficult to wake", hi: "जागने में मुश्किल", bn: "জাগানো কঠিন" } },
+          { val: "Confused", label: { en: "Confused", hi: "भ्रमित", bn: "বিভ্রান্ত" } },
+          { val: "Fully alert", label: { en: "Fully alert", hi: "पूरी तरह सचेत", bn: "সম্পূর্ণ সজাগ" } }
+        ] 
+      },
+      { 
+        id: "breathing_fever", 
+        text: { en: "Are they breathing rapidly?", hi: "क्या वे तेजी से सांस ले रहे हैं?", bn: "তারা কি দ্রুত শ্বাস নিচ্ছেন?" },
+        options: [
+          { val: "Yes, struggling", label: { en: "Yes, struggling", hi: "हाँ, परेशानी हो रही है", bn: "হ্যাঁ, কষ্ট হচ্ছে" } },
+          { val: "Slightly rapid", label: { en: "Slightly rapid", hi: "थोड़ा तेज", bn: "একটু দ্রুত" } },
+          { val: "Normal", label: { en: "Normal", hi: "सामान्य", bn: "স্বাভাবিক" } }
+        ] 
+      }
+    ],
+    predictions: {
+      high: { condition: "Severe Systemic Infection / Sepsis", severity: "Critical", ambulance: "ICU Ambulance", confidence: 90 },
+      low: { condition: "Viral Infection / Moderate Fever", severity: "Moderate", ambulance: "Basic Consultation", confidence: 85 }
+    },
+    suggestions: [
+      { icon: "🌡️", text: { en: "Apply cool, damp cloths to the forehead and armpits.", hi: "माथे और बगल में ठंडे, नम कपड़े लगाएं।", bn: "কপাল এবং বগলে ঠান্ডা, ভেজা কাপড় লাগান।" } },
+      { icon: "💧", text: { en: "Encourage sipping fluids if the patient is fully conscious and alert.", hi: "यदि मरीज पूरी तरह सचेत है तो तरल पदार्थ पीने के लिए प्रोत्साहित करें।", bn: "রোগী সম্পূর্ণ সজাগ থাকলে তরল পানে উৎসাহিত করুন।" } }
+    ],
+    medicines: [
+      { name: "Calpol 650mg", dosage: "1 Tablet every 6 hours if temp >100°F", instruction: "Do not exceed 4 tablets in any given 24-hour cycle window.", hydration: "Drink plenty of water or electrolyte formulations." },
+      { name: "Electral ORS Powder", dosage: "1 Sachet in 1 Litre water", instruction: "Sip progressively across the day to maintain vital electrolyte baselines.", hydration: "Continuous replenishment yields faster metabolic baseline restoration." }
+    ]
+  }
+};
+
+let currentLang = 'en';
+let selectedSymptom = null;
+let assessmentAnswers = {};
+let currentRunningScore = 0;
+let synth = window.speechSynthesis;
+
+let recognition = null;
+let persistentAudioStream = null;
+let isPanelOpen = false;
+let isListening = false;
+let isSpeaking = false;
+let vState = 'IDLE'; 
+let vSymptom = null;
+let vQuestionIndex = 0;
+let currentPredData = null;
+
+async function requestPersistentMic() {
+  if (!persistentAudioStream && navigator.mediaDevices) {
+    try {
+      persistentAudioStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+    } catch (e) {
+      console.warn("Persistent mic permission denied.", e);
+    }
+  }
+}
+
+function changeLanguage() {
+  currentLang = document.getElementById('appLang').value;
+  document.querySelectorAll('[data-i18n]').forEach(el => {
+    const key = el.getAttribute('data-i18n');
+    if(i18n[currentLang][key]) {
+      el.textContent = i18n[currentLang][key];
+    }
+  });
+  
+  if (selectedSymptom && document.getElementById('questionsSection').style.display === 'block') {
+    renderQuestions(selectedSymptom);
+  }
+  
+  showToast('Language updated.');
+}
+
+function selectSymptom(card) {
+  if (isPanelOpen) { closeVoicePanel(); }
+  document.querySelectorAll('.symptom-card').forEach(c => c.classList.remove('active'));
+  card.classList.add('active');
+  selectedSymptom = card.getAttribute('data-symptom');
+  if(!emergencyData[selectedSymptom]) selectedSymptom = 'chest_pain';
+  assessmentAnswers = {};
+  renderQuestions(selectedSymptom);
+  document.getElementById('questionsSection').scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+function renderQuestions(symptomKey) {
+  const data = emergencyData[symptomKey];
+  const section = document.getElementById('questionsSection');
+  const container = document.getElementById('questionsContainer');
+  section.style.display = 'block';
+  document.getElementById('analysisSection').style.display = 'none';
+  document.getElementById('predictionSection').style.display = 'none';
+  container.innerHTML = '';
+
+  data.questions.forEach((q) => {
+    const item = document.createElement('div');
+    item.className = 'question-item';
+    
+    const qText = q.text[currentLang] || q.text['en'];
+    
+    const optionBtns = q.options.map(opt => {
+      const optLabel = opt.label[currentLang] || opt.label['en'];
+      return `<button class="q-opt" onclick="selectOption(this, '${q.id}', '${opt.val}')">${optLabel}</button>`;
+    }).join('');
+    
+    item.innerHTML = `<div class="question-label">${qText}</div><div class="q-options">${optionBtns}</div>`;
+    container.appendChild(item);
+  });
+}
+
+function selectOption(btn, id, value) {
+  const group = btn.closest('.q-options');
+  group.querySelectorAll('.q-opt').forEach(b => b.classList.remove('selected'));
+  btn.classList.add('selected');
+  assessmentAnswers[id] = value;
+}
+
+function calculateSeverityScore() {
+  let score = 0;
+  let factors = 0;
+  for (const [key, val] of Object.entries(assessmentAnswers)) {
+    const vStr = (val + '').toLowerCase();
+    if (vStr.includes('severe') || vStr.includes('yes, noticeable') || vStr.includes('over 103') || vStr.includes('massive') || vStr.includes('blue') || vStr.includes('high') || vStr.includes('unconscious') || vStr.includes('suddenly')) {
+      score += 20; 
+    } else if (vStr.includes('moderate') || vStr.includes('mild') || vStr.includes('somewhat') || vStr.includes('labored') || vStr.includes('confused') || vStr.includes('gradually')) {
+      score += 12;
+    } else {
+      score += 5;
+    }
+    factors++;
+  }
+  return factors > 0 ? Math.min(100, Math.round(10 + score)) : 60;
+}
+
+function analyzeEmergency() {
+  const isVoiceActive = isPanelOpen && vSymptom !== null;
+  const targetSymptom = isVoiceActive ? vSymptom : selectedSymptom;
+  
+  if (!targetSymptom) {
+    showToast('Please select a symptom or complete the assessment.');
+    return;
+  }
+  
+  const score = isVoiceActive ? currentRunningScore : calculateSeverityScore();
+  const data = emergencyData[targetSymptom];
+  const pred = score >= 75 ? data.predictions.high : data.predictions.low;
+  currentPredData = pred;
+  
+  document.getElementById('analysisSection').style.display = 'block';
+  document.getElementById('predictionSection').style.display = 'none';
+  document.getElementById('analysisSection').scrollIntoView({ behavior: 'smooth' });
+
+  const ringFill = document.getElementById('ringFill');
+  ringFill.style.strokeDashoffset = 314;
+  
+  setTimeout(() => {
+    const offset = 314 - (score / 100) * 314;
+    ringFill.style.strokeDashoffset = offset;
+    document.getElementById('ringScore').textContent = score + '%';
+    ringFill.style.stroke = score >= 75 ? 'var(--red-alert)' : 'var(--primary)';
+  }, 300);
+
+  document.getElementById('sv1').textContent = 'COMPLETE';
+  setTimeout(() => document.getElementById('sv2').textContent = pred.condition, 500);
+  setTimeout(() => document.getElementById('sv4').textContent = pred.confidence + '%', 1000);
+  
+  const badge = document.getElementById('emergencyBadge');
+  badge.textContent = score >= 75 ? 'CRITICAL EMERGENCY DETECTED' : 'EVALUATION COMPLETE';
+  badge.style.borderColor = score >= 75 ? 'var(--red-alert)' : 'var(--border-med)';
+  badge.style.color = score >= 75 ? 'var(--red-alert)' : 'var(--text-main)';
+  badge.style.background = score >= 75 ? 'var(--red-light)' : 'var(--bg-white)';
+
+  setTimeout(() => {
+    renderPredictions(score, pred, data);
+    document.getElementById('ecosystemRecommendations').style.display = 'none';
+    if(isPanelOpen) {
+      const locPrompt = i18n[currentLang].share_loc_prompt;
+      addChatMsg(locPrompt, 'ai');
+      speakVoice(locPrompt, currentLang, () => {
+        vState = 'WAIT_LOCATION';
+        setPanelStatus('Waiting for location...', 'standby');
+      });
+    }
+  }, 1500);
+}
+
+function renderPredictions(score, pred, data) {
+  const section = document.getElementById('predictionSection');
+  const grid = document.getElementById('predictionGrid');
+  const sugCont = document.getElementById('suggestionsContainer');
+  section.style.display = 'block';
+
+  grid.innerHTML = `
+    <div class="prediction-card"><div class="pred-icon">🧠</div><div class="pred-label">AI Condition</div><div class="pred-value" style="color:var(--primary)">${pred.condition}</div></div>
+    <div class="prediction-card"><div class="pred-icon">⚠️</div><div class="pred-label">Severity Level</div><div class="pred-value" style="color:${score >= 75 ? 'var(--red-alert)' : 'var(--orange)'}">${pred.severity}</div></div>
+    <div class="prediction-card"><div class="pred-icon">🚑</div><div class="pred-label">Ambulance Match</div><div class="pred-value">${pred.ambulance}</div></div>
+  `;
+
+  let suggestionHtml = data.suggestions.map(s => {
+    const text = s.text[currentLang] || s.text['en'];
+    return `<div class="suggestion-item"><div class="sug-icon">${s.icon}</div><div class="sug-text">${text}</div></div>`;
+  }).join('');
+  
+  if (score < 75) {
+    const noAmbText = i18n[currentLang].no_amb_needed;
+    suggestionHtml += `<div class="suggestion-item info"><div class="sug-icon">ℹ️</div><div class="sug-text" style="color:var(--text-muted)">${noAmbText}</div></div>`;
+  }
+
+  sugCont.innerHTML = suggestionHtml;
+
+  let currentLoc = document.getElementById('geoLocInput').value.trim();
+  if(!currentLoc) {
+    currentLoc = "New Town, Kolkata";
+    document.getElementById('geoLocInput').value = currentLoc;
+  }
+  buildEcosystemCards(currentLoc);
+
+  section.scrollIntoView({ behavior: 'smooth' });
+}
+
+function processLocationInfrastructure() {
+  const inputVal = document.getElementById('geoLocInput').value.trim();
+  if(!inputVal) {
+    showToast('Please enter your village, town or area name.');
+    return;
+  }
+  
+  const locator = document.getElementById('radarLocator');
+  locator.style.display = 'block';
+  showToast('AI Scanning Regional Healthcare Logistics...');
+  
+  setTimeout(() => {
+    locator.style.display = 'none';
+    buildEcosystemCards(inputVal);
+  }, 1500);
+}
+
+function buildEcosystemCards(locationStr) {
+  const isVoiceActive = isPanelOpen && vSymptom !== null;
+  const targetSymptom = isVoiceActive ? vSymptom : selectedSymptom;
+  const score = isVoiceActive ? currentRunningScore : calculateSeverityScore();
+  const data = emergencyData[targetSymptom] || emergencyData['chest_pain'];
+  const specialistType = data.specialist || "General Physician";
+  
+  const locLower = locationStr.toLowerCase();
+  let isRemote = locLower.includes('village') || locLower.includes('hill') || locLower.includes('remote') || locLower.includes('rural') || locLower.includes('mountain');
+  
+  let selectedInfrastructure = HEALTHCARE_REGISTRY.generic;
+  
+  if (locLower.includes('behala')) {
+    selectedInfrastructure = HEALTHCARE_REGISTRY.kolkata.behala;
+  } else if (locLower.includes('tollygunge') || locLower.includes('tollygunj')) {
+    selectedInfrastructure = HEALTHCARE_REGISTRY.kolkata.tollygunge;
+  } else if (locLower.includes('salt lake') || locLower.includes('saltlake')) {
+    selectedInfrastructure = HEALTHCARE_REGISTRY.kolkata.salt_lake;
+  } else if (locLower.includes('new town') || locLower.includes('newtown')) {
+    selectedInfrastructure = HEALTHCARE_REGISTRY.kolkata.new_town;
+  } else if (locLower.includes('garia')) {
+    selectedInfrastructure = HEALTHCARE_REGISTRY.kolkata.garia;
+  } else if (isRemote) {
+    selectedInfrastructure = HEALTHCARE_REGISTRY.remote;
+  } else if (locLower.includes('kolkata') || locLower.includes('calcutta')) {
+    selectedInfrastructure = HEALTHCARE_REGISTRY.kolkata.new_town;
+  }
+
+  const hologram = document.getElementById('hologramStatus');
+  if(isRemote) {
+    hologram.innerHTML = `⚠️ REGIONAL ROAD ACCESSIBILITY LIMITED IN [${locationStr.toUpperCase()}]. TELECONSULT AND MOBILE OUTREACH DISPATCH VEHICLES DEPLOYED.`;
+    hologram.parentElement.style.borderColor = 'var(--orange)';
+  } else {
+    hologram.innerHTML = `✅ HIGH-VELOCITY LOGISTICS NODES DEPLOYED IN [${locationStr.toUpperCase()}]. URBAN PHARMACIES AND CRITICAL ICU SERVICES ACTIVE.`;
+    hologram.parentElement.style.borderColor = 'var(--primary)';
+  }
+
+  /* Render Doctors */
+  const docContainer = document.getElementById('doctorContainer');
+  docContainer.innerHTML = '';
+  const docsList = selectedInfrastructure.doctors || HEALTHCARE_REGISTRY.generic.doctors;
+  docsList.forEach(d => {
+    docContainer.innerHTML += `
+      <div class="eco-card">
+        <span class="eco-badge-status status-online">${d.status}</span>
+        <div class="eco-header">
+          <div class="eco-avatar">👨‍⚕️</div>
+          <div class="eco-meta">
+            <div class="eco-name">${d.name}</div>
+            <div class="eco-sub">${d.spec || specialistType} | ⭐ ${d.rate}</div>
+          </div>
+        </div>
+        <div class="eco-details">
+          <div class="eco-row"><span class="eco-lbl">Clinic Affiliation:</span><span class="eco-val">${d.hosp}</span></div>
+          <div class="eco-row"><span class="eco-lbl">Distance Range:</span><span class="eco-val">${d.dist}</span></div>
+          <div class="eco-row"><span class="eco-lbl">Consultation Fee:</span><span class="eco-val">${d.fee}</span></div>
+          <div class="eco-row"><span class="eco-lbl">Availability Model:</span><span class="eco-val" style="color:var(--primary)">${d.type}</span></div>
+        </div>
+        <div class="eco-actions">
+          <a class="eco-btn eco-btn-outline" href="tel:${d.phone}">📞 Call Dr.</a>
+          <button class="eco-btn eco-btn-filled" onclick="window.open('https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(d.mapQuery)}')">📍 Route Map</button>
+        </div>
+      </div>
+    `;
+  });
+
+  /* Render Hospitals */
+  const hospContainer = document.getElementById('hospitalContainer');
+  hospContainer.innerHTML = '';
+  const hospList = selectedInfrastructure.hospitals || HEALTHCARE_REGISTRY.generic.hospitals;
+  hospList.forEach(h => {
+    hospContainer.innerHTML += `
+      <div class="eco-card hospital-card">
+        <span class="eco-badge-status status-online">24/7 Triage</span>
+        <div class="eco-header">
+          <div class="eco-avatar">🏥</div>
+          <div class="eco-meta">
+            <div class="eco-name">${h.name}</div>
+            <div class="eco-sub">${h.type} | ⭐ ${h.rating}</div>
+          </div>
+        </div>
+        <div class="eco-details">
+          <div class="eco-row"><span class="eco-lbl">Triage Bed Load:</span><span class="eco-val" style="color:var(--red-alert)">${h.beds}</span></div>
+          <div class="eco-row"><span class="eco-lbl">Est. Distance:</span><span class="eco-val">${h.dist}</span></div>
+          <div class="eco-row"><span class="eco-lbl">Specialized Field:</span><span class="eco-val">${h.specialized}</span></div>
+        </div>
+        <div class="eco-actions">
+          <a class="eco-btn eco-btn-outline" href="tel:${h.phone}">📞 Emergency Line</a>
+          <button class="eco-btn eco-btn-filled" onclick="window.open('https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(h.mapQuery)}')">📍 Emergency GPS</button>
+        </div>
+      </div>
+    `;
+  });
+
+  /* Render Pharmacies */
+  const pharContainer = document.getElementById('pharmacyContainer');
+  pharContainer.innerHTML = '';
+  const pharmacySource = isRemote ? HEALTHCARE_REGISTRY.remote.hospitals : selectedInfrastructure.hospitals;
+  const dummyPharmacyName = isRemote ? "Zila Community Pharmacy Dispensary" : "Apollo Digital Retail Pharmacy";
+  
+  pharContainer.innerHTML = `
+    <div class="eco-card pharmacy-card">
+      <span class="eco-badge-status status-online">Operational</span>
+      <div class="eco-header">
+        <div class="eco-avatar">🏪</div>
+        <div class="eco-meta">
+          <div class="eco-name">${dummyPharmacyName}</div>
+          <div class="eco-sub">Surgicals & Essential Formulations</div>
+        </div>
+      </div>
+      <div class="eco-details">
+        <div class="eco-row"><span class="eco-lbl">Operating Hours:</span><span class="eco-val">24 Hours Open</span></div>
+        <div class="eco-row"><span class="eco-lbl">Delivery Logistics:</span><span class="eco-val" style="color:var(--green)">Instant Courier Support Available</span></div>
+      </div>
+      <div class="eco-actions">
+        <a class="eco-btn eco-btn-outline" href="tel:+919876543210">📞 Call Store</a>
+        <button class="eco-btn eco-btn-filled" onclick="window.open('https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(dummyPharmacyName + ' ' + locationStr)}')">🚚 Route Map</button>
+      </div>
+    </div>
+  `;
+
+  /* Render Medicines with Official Store Deep-Links */
+  const medContainer = document.getElementById('medicineContainer');
+  medContainer.innerHTML = '';
+  let medsHtml = `<div class="eco-card med-card" style="grid-column: 1 / -1;"><div class="med-list">`;
+  
+  if (data.medicines && data.medicines.length > 0) {
+    data.medicines.forEach(m => {
+      const tata1mgLink = `https://www.1mg.com/search/all?name=${encodeURIComponent(m.name)}`;
+      const netmedsLink = `https://www.netmeds.com/catalogsearch/result?q=${encodeURIComponent(m.name)}`;
+      const apolloLink = `https://www.apollo247.com/search?value=${encodeURIComponent(m.name)}`;
+      
+      medsHtml += `
+        <div class="med-item">
+          <div class="med-title-row">
+            <span class="med-name">💊 ${m.name}</span>
+            <span class="med-dose">${m.dosage}</span>
+          </div>
+          <div class="med-instruction"><strong>Formulation Strategy:</strong> ${m.instruction}</div>
+          <div class="med-instruction" style="color: var(--primary)"><strong>Hydration:</strong> ${m.hydration}</div>
+          <div class="med-links">
+            <a class="med-link-btn" href="${tata1mgLink}" target="_blank">🛒 Buy on Tata 1mg</a>
+            <a class="med-link-btn" href="${netmedsLink}" target="_blank">📦 Buy on Netmeds</a>
+            <a class="med-link-btn" href="${apolloLink}" target="_blank">⚕️ Buy on Apollo</a>
+          </div>
+        </div>
+      `;
+    });
+  } else {
+    medsHtml += `
+      <div class="med-item">
+        <div class="med-title-row"><span class="med-name">⚠️ Critical Stabilisation Required</span></div>
+        <div class="med-instruction">Autonomous home medication contraindicated. Institutional ICU triage recommended.</div>
+      </div>
+    `;
+  }
+  
+  medsHtml += `
+    </div>
+    <div class="disclaimer-box">
+      <strong>⚠️ CLINICAL GUIDANCE NOTICE:</strong> Suggestions generated here correspond to secondary logistical triage profiles. Verify all compound actions with an authorized practitioner before application.
+    </div>
+  </div>`;
+  medContainer.innerHTML = medsHtml;
+
+  /* Render Digital Delivery Channels */
+  const delContainer = document.getElementById('deliveryContainer');
+  delContainer.innerHTML = `
+    <div class="eco-card delivery-card">
+      <div class="eco-header">
+        <div class="eco-avatar">💊</div>
+        <div class="eco-meta">
+          <div class="eco-name">Tata 1mg Logistics</div>
+          <div class="eco-sub">Prescriptions & Support</div>
+        </div>
+      </div>
+      <button class="eco-btn eco-btn-filled" style="background:var(--text-main)" onclick="window.open('https://www.1mg.com')">Visit Tata 1mg</button>
+    </div>
+    <div class="eco-card delivery-card">
+      <div class="eco-header">
+        <div class="eco-avatar">⚡</div>
+        <div class="eco-meta">
+          <div class="eco-name">Blinkit Hyperlocal</div>
+          <div class="eco-sub">10-Minute Droplist Delivery</div>
+        </div>
+      </div>
+      <button class="eco-btn eco-btn-filled" style="background:var(--text-main)" onclick="window.open('https://blinkit.com')">Visit Blinkit</button>
+    </div>
+    <div class="eco-card delivery-card">
+      <div class="eco-header">
+        <div class="eco-avatar">🏥</div>
+        <div class="eco-meta">
+          <div class="eco-name">Apollo 24/7 Digital</div>
+          <div class="eco-sub">Institutional Logistics Network</div>
+        </div>
+      </div>
+      <button class="eco-btn eco-btn-filled" style="background:var(--text-main)" onclick="window.open('https://www.apollo247.com')">Visit Apollo 24/7</button>
+    </div>
+  `;
+
+  document.getElementById('ecosystemRecommendations').style.display = 'block';
+  document.getElementById('ecosystemRecommendations').scrollIntoView({ behavior: 'smooth' });
+}
+
+function initSpeechRecognition() {
+  if (recognition) return true; 
+  const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+  if (!SR) { showToast('Voice not supported in this browser'); return false; }
+  
+  recognition = new SR();
+  recognition.continuous = false;
+  recognition.interimResults = false;
+  recognition.maxAlternatives = 1;
+  
+  recognition.onstart = () => {
+    isListening = true;
+    setOrbState('listening');
+    setPanelStatus('Listening...', 'listening');
+  };
+  
+  recognition.onresult = (e) => {
+    if (isSpeaking) return;
+    const transcript = e.results[0][0].transcript;
+    handleVoiceInput(transcript);
+  };
+
+  recognition.onerror = (e) => {
+    isListening = false;
+    setOrbState('idle');
+    if (e.error === 'not-allowed' || e.error === 'service-not-allowed') {
+      showToast('Microphone access denied');
+      setPanelStatus('Mic Blocked', 'emergency');
+    } else {
+      setPanelStatus(i18n[currentLang].tap_to_speak, 'standby');
+    }
+  };
+  
+  recognition.onend = () => {
+    isListening = false;
+    if (!isSpeaking) {
+      setOrbState('idle');
+      if (vState !== 'ANALYZING') { setPanelStatus(i18n[currentLang].tap_to_speak, 'standby'); }
+    }
+  };
+  return true;
+}
+
+function handleOrbClick() {
+  if (!isPanelOpen) {
+    openVoicePanel();
+  } else {
+    if (isSpeaking) {
+      synth.cancel();
+      isSpeaking = false;
+    }
+    if (!isListening) { startListening(); } 
+    else { stopListening(); }
+  }
+}
+
+async function openVoicePanel() {
+  await requestPersistentMic();
+  if (!initSpeechRecognition()) return;
+  
+  const panel = document.getElementById('voicePanel');
+  panel.style.display = 'flex';
+  isPanelOpen = true;
+  setOrbState('idle');
+
+  vState = 'WAIT_SYMPTOM';
+  document.getElementById('vpChatArea').innerHTML = '<div class="vp-welcome"><div class="vp-welcome-icon">🤖</div><div>AI Voice Assessment Ready</div></div>';
+  assessmentAnswers = {};
+  currentRunningScore = 10; 
+  
+  const greet = i18n[currentLang].ai_greeting;
+  addChatMsg(greet, 'ai');
+  speakVoice(greet, currentLang, () => {
+    setPanelStatus(i18n[currentLang].tap_to_speak, 'standby');
+  });
+}
+
+function closeVoicePanel() {
+  const panel = document.getElementById('voicePanel');
+  panel.style.display = 'none';
+  isPanelOpen = false;
+  vState = 'IDLE';
+  synth.cancel();
+  isSpeaking = false;
+  stopListening();
+  setOrbState('idle');
+}
+
+function startListening() {
+  if (!recognition || isListening) return;
+  synth.cancel();
+  isSpeaking = false;
+
+  if (currentLang === 'hi') recognition.lang = 'hi-IN';
+  else if (currentLang === 'bn') recognition.lang = 'bn-IN';
+  else recognition.lang = 'en-US';
+
+  try { recognition.start(); } catch (e) { console.error("Mic blocked:", e); }
+}
+
+function stopListening() {
+  if (recognition && isListening) { try { recognition.stop(); } catch(e) {} }
+  isListening = false;
+}
+
+function setOrbState(state) {
+  const orb = document.getElementById('aiVoiceOrb');
+  orb.className = 'ai-voice-orb' + (isPanelOpen ? ' active' : '');
+  if(state === 'listening') orb.classList.add('listening');
+  else if(state === 'processing') orb.classList.add('processing');
+  else if(state === 'speaking') orb.classList.add('speaking');
+  else if(state === 'emergency') orb.classList.add('emergency');
+}
+
+function setPanelStatus(text, badgeClass) {
+  document.getElementById('vpStatusText').textContent = text;
+  const badge = document.getElementById('vpStatusBadge');
+  badge.textContent = text;
+  badge.className = 'vp-status-badge ' + (badgeClass || '');
+  if(badgeClass === 'processing' || badgeClass === 'speaking' || badgeClass === 'emergency' || badgeClass === 'listening') {
+    document.getElementById('vpWaveform').classList.add('active');
+  } else {
+    document.getElementById('vpWaveform').classList.remove('active');
+  }
+}
+
+function addChatMsg(text, type) {
+  const area = document.getElementById('vpChatArea');
+  const welcome = area.querySelector('.vp-welcome');
+  if(welcome) welcome.remove();
+  const d = new Date();
+  const timeStr = `${d.getHours().toString().padStart(2,'0')}:${d.getMinutes().toString().padStart(2,'0')}`;
+  const msg = document.createElement('div');
+  msg.className = `v-msg ${type}`;
+  msg.innerHTML = `<div class="v-msg-bubble">${text}</div><div class="v-msg-time">${timeStr}</div>`;
+  area.appendChild(msg);
+  area.scrollTop = area.scrollHeight;
+}
+
+function showTypingIndicator() {
+  const area = document.getElementById('vpChatArea');
+  const msg = document.createElement('div');
+  msg.className = `v-msg ai typing-ind-wrap`;
+  msg.innerHTML = `<div class="typing-indicator"><div class="typing-dot"></div><div class="typing-dot"></div><div class="typing-dot"></div></div>`;
+  area.appendChild(msg);
+  area.scrollTop = area.scrollHeight;
+  return msg;
+}
+
+function speakVoice(text, lang, callback, isEmergency = false) {
+  isSpeaking = true;
+  stopListening(); 
+
+  synth.cancel();
+  setOrbState(isEmergency ? 'emergency' : 'speaking');
+  setPanelStatus('AI Speaking...', isEmergency ? 'emergency' : 'speaking');
+  
+  const ut = new SpeechSynthesisUtterance(text);
+  const voices = synth.getVoices();
+  const femaleVoice = voices.find(v => 
+    (v.name.includes('Female') || v.name.includes('Zira') || v.name.includes('Samantha') || v.name.includes('Victoria')) && 
+    v.lang.startsWith(lang === 'hi' ? 'hi' : lang === 'bn' ? 'bn' : 'en')
+  ) || voices.find(v => v.name.includes('Female') || v.name.includes('Zira'));
+  
+  if (femaleVoice) ut.voice = femaleVoice;
+  if (lang === 'hi') ut.lang = 'hi-IN'; else if (lang === 'bn') ut.lang = 'bn-IN'; else ut.lang = 'en-US';
+  ut.rate = isEmergency ? 1.05 : 1.0; 
+
+  ut.onend = () => {
+    isSpeaking = false;
+    setOrbState('idle');
+    if (callback) callback(); else setPanelStatus(i18n[currentLang].tap_to_speak, 'standby');
+  };
+  ut.onerror = () => {
+    isSpeaking = false;
+    setOrbState('idle');
+    if (callback) callback();
+  };
+  synth.speak(ut);
+}
+
+function autoDetectLang(text) {
+  if(/[\u0900-\u097F]/.test(text)) return 'hi';
+  if(/[\u0980-\u09FF]/.test(text)) return 'bn';
+  return 'en';
+}
+
+function handleVoiceInput(transcript) {
+  addChatMsg(transcript, 'user');
+  
+  const detectedLang = autoDetectLang(transcript);
+  if(detectedLang !== 'en' && currentLang === 'en') {
+    currentLang = detectedLang;
+    document.getElementById('appLang').value = detectedLang;
+  }
+
+  setPanelStatus('Processing...', 'processing');
+  setOrbState('processing');
+  showTypingIndicator();
+  
+  const prevState = vState;
+  vState = 'ANALYZING'; 
+
+  setTimeout(() => {
+    const ind = document.querySelector('.typing-ind-wrap');
+    if(ind) ind.remove();
+    
+    if(prevState === 'WAIT_SYMPTOM') processSymptom(transcript);
+    else if(prevState === 'WAIT_ANSWER') processAnswer(transcript);
+    else if(prevState === 'WAIT_LOCATION') handleVoiceLocation(transcript);
+    else if(prevState === 'WAIT_BOOKING') processBooking(transcript);
+  }, 800); 
+}
+
+function processSymptom(text) {
+  const lower = text.toLowerCase();
+  vSymptom = null;
+  
+  if (lower.includes('chest') || lower.includes('pain') || lower.includes('दर्द') || lower.includes('ব্যথা')) vSymptom = 'chest_pain';
+  else if (lower.includes('bleed') || lower.includes('रक्त') || lower.includes('রক্ত') || lower.includes('cut')) vSymptom = 'bleeding';
+  else if (lower.includes('breath') || lower.includes('सांस') || lower.includes('শ্বাস')) vSymptom = 'breathing';
+  else if (lower.includes('accident') || lower.includes('चोट') || lower.includes('आघात') || lower.includes('fall')) vSymptom = 'accident';
+  else if (lower.includes('stroke') || lower.includes('स्ट्रोक') || lower.includes('স্ট্রোক') || lower.includes('face') || lower.includes('droop')) vSymptom = 'stroke';
+  else if (lower.includes('fever') || lower.includes('बुखार') || lower.includes('জ্বর') || lower.includes('hot')) vSymptom = 'fever';
+  
+  if(!vSymptom) {
+    const msg = i18n[currentLang].fallback;
+    addChatMsg(msg, 'ai');
+    speakVoice(msg, currentLang, () => {
+      vState = 'WAIT_SYMPTOM';
+      setPanelStatus(i18n[currentLang].tap_to_speak, 'standby');
+    });
+    return;
+  }
+  
+  vQuestionIndex = 0;
+  currentRunningScore = 10; 
+  
+  const acks = i18n[currentLang].ack;
+  const initialAck = acks[Math.floor(Math.random() * acks.length)];
+  askDynamicQuestion(initialAck);
+}
+
+function askDynamicQuestion(prefixText = "") {
+  if(!emergencyData[vSymptom] || vQuestionIndex >= emergencyData[vSymptom].questions.length) {
+    finishVoiceAssessment();
+    return;
+  }
+  
+  const qObj = emergencyData[vSymptom].questions[vQuestionIndex];
+  const qText = qObj.text[currentLang] || qObj.text['en'];
+  
+  const fullSpeech = prefixText ? `${prefixText} ${qText}` : qText;
+  vState = 'ASKING';
+  addChatMsg(fullSpeech, 'ai');
+  speakVoice(fullSpeech, currentLang, () => {
+    vState = 'WAIT_ANSWER';
+    setPanelStatus(i18n[currentLang].tap_to_speak, 'standby');
+  });
+}
+
+function processAnswer(text) {
+  let isSevere = /\b(10|9|8|severe|very|high|yes|massive|heavy|बहुत|প্রচুর|হ্যাঁ|हां)\b/.test(text.toLowerCase());
+  let isMild = /\b(mild|थोड़ा|অল্প|5|4|3|2|1|some|bit)\b/.test(text.toLowerCase());
+  let isNo = /\b(no|none|नहीं|না)\b/.test(text.toLowerCase());
+
+  if (isSevere) currentRunningScore += 18;
+  else if (isMild) currentRunningScore += 10;
+  else if (isNo) currentRunningScore += 2;
+  else currentRunningScore += 8; 
+
+  vQuestionIndex++;
+
+  if (currentRunningScore >= 80) {
+    triggerCriticalEarlyExit();
+    return;
+  }
+
+  const acks = i18n[currentLang].ack;
+  const ack = acks[Math.floor(Math.random() * acks.length)];
+  askDynamicQuestion(ack);
+}
+
+function triggerCriticalEarlyExit() {
+  vState = 'ANALYZING';
+  const criticalMsg = i18n[currentLang].analysis_critical;
+  
+  addChatMsg(criticalMsg, 'ai');
+  speakVoice(criticalMsg, currentLang, () => {
+    analyzeEmergency(); 
+    setTimeout(() => {
+      const locPrompt = i18n[currentLang].share_loc_prompt;
+      addChatMsg(locPrompt, 'ai');
+      speakVoice(locPrompt, currentLang, () => {
+        vState = 'WAIT_LOCATION';
+        setPanelStatus('Waiting for location...', 'standby');
+      }, true); 
+    }, 2500);
+  }, true); 
+}
+
+function finishVoiceAssessment() {
+  vState = 'ANALYZING';
+  const startMsg = i18n[currentLang].analysis_done;
+  addChatMsg(startMsg, 'ai');
+  speakVoice(startMsg, currentLang, () => {
+    analyzeEmergency(); 
+  });
+}
+
+function handleVoiceLocation(text) {
+  document.getElementById('geoLocInput').value = text;
+  addChatMsg(`Location registered: ${text}`, 'ai');
+  processLocationInfrastructure();
+  
+  setTimeout(() => {
+    const confirmationText = i18n[currentLang].booking_prompt;
+    addChatMsg(confirmationText, 'ai');
+    speakVoice(confirmationText, currentLang, () => {
+      vState = 'WAIT_BOOKING';
+      setPanelStatus(i18n[currentLang].tap_to_reply, 'standby');
+    });
+  }, 2000);
+}
+
+function processBooking(text) {
+  vState = 'IDLE';
+  const lower = text.toLowerCase();
+  if (lower.includes('yes') || lower.includes('हां') || lower.includes('হ্যাঁ') || lower.includes('ok') || lower.includes('book') || lower.includes('dispatch') || lower.includes('please')) {
+    const msg = i18n[currentLang].booking_confirm;
+    addChatMsg(msg, 'ai');
+    speakVoice(msg, currentLang, () => {
+      bookAmbulance();
+      setOrbState('idle');
+      setPanelStatus('Standby', 'standby');
+    });
+  } else {
+    const msg = "Okay. The regional medical ecosystem data channels remain populated below for your manual processing.";
+    addChatMsg(msg, 'ai');
+    speakVoice(msg, 'en', () => {
+      setOrbState('idle');
+      setPanelStatus('Standby', 'standby');
+    });
+  }
+}
+
+function navigateToAmbulance() {
+  try {
+    if (window.self !== window.top) {
+      window.parent.postMessage({ type: 'openAmbulancePortal' }, '*');
+      return;
+    }
+  } catch (e) {
+    console.warn("parent postMessage failed:", e);
+  }
+  window.location.href = 'ambulance.html';
+}
+
+function bookAmbulance() {
+  showToast('AI Dispatching optimal ambulance. ETA: 7 mins');
+  setTimeout(() => {
+    navigateToAmbulance();
+  }, 500);
+}
+
+function showToast(msg) {
+  const toast = document.getElementById('toast');
+  toast.textContent = msg;
+  toast.classList.add('show');
+  setTimeout(() => toast.classList.remove('show'), 3000);
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+  document.getElementById('appLang').value = 'en';
+  window.speechSynthesis.onvoiceschanged = () => {}; 
+});
+</script>
+</body>
+</html>

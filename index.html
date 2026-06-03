@@ -1,0 +1,1380 @@
+<!DOCTYPE html>
+
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <meta name="theme-color" content="#0A0F1D">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+
+    <title>resQ</title>
+
+    
+
+    <!-- Leaflet CSS for Real Maps -->
+
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/>
+
+    
+
+    <!-- Imports: Google Fonts (Plus Jakarta Sans & Outfit) and Lucide Icons -->
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+
+    
+
+    <link rel="stylesheet" href="style.css">
+
+</head>
+
+<body>
+
+<div id="app-container" class="light-theme">
+
+    <!-- Desktop-only virtual device status bar -->
+    <div class="device-status-bar">
+        <div style="flex:1; text-align:left;">9:41</div>
+        <div class="device-notch"></div>
+        <div class="device-status-right" style="flex:1; justify-content:flex-end;">
+            <!-- Cellular signal indicator (4 vertical bars) -->
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="margin-right:2px;"><path d="M12 20h.01M16 20h.01M8 20h.01M12 16h.01M16 16h.01M8 16h.01M12 12h.01M16 12h.01M8 12h.01"></path></svg>
+            <span style="font-size: 11px; font-weight: 800; margin-right: 4px;">5G</span>
+            <!-- Battery outline icon -->
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="7" width="16" height="10" rx="2" ry="2"></rect><line x1="22" y1="11" x2="22" y2="13"></line></svg>
+        </div>
+    </div>
+
+    <!-- Ambient glow mesh layers -->
+
+    <div class="ambient-glow ambient-glow-1"></div>
+
+    <div class="ambient-glow ambient-glow-2"></div>
+
+    <!-- Premium App Header -->
+
+    <div class="app-header">
+
+        <div class="header-btn" title="Safety Settings" onclick="navigate('settings-screen')" style="cursor: pointer;">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg>
+        </div>
+        
+        <div class="header-logo-group" onclick="navigate('home-screen')" style="cursor: pointer;">
+            <div class="header-logo-row">
+                <span class="header-logo-text">res<span>Q</span></span>
+                <span class="header-live-badge">Live</span>
+            </div>
+            <span class="header-logo-subtitle">Emergency Care, Anytime</span>
+        </div>
+
+        <div style="display:flex;align-items:center;gap:12px;">
+
+            <div class="header-btn" title="Notifications">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path><path d="M13.73 21a2 2 0 0 1-3.46 0"></path></svg>
+                <div class="notification-dot"></div>
+            </div>
+
+            <div class="header-profile-avatar" onclick="navigate('profile-screen')" title="My Profile" id="header-profile-initials">SD</div>
+
+        </div>
+
+    </div>
+
+    <!-- ════════════════ HOME SCREEN ════════════════ -->
+
+    <div id="home-screen" class="screen active">
+
+        <!-- Location Selector -->
+        <div class="location-selector" onclick="navigate('location-screen')">
+            <div class="location-selector-icon">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2a8 8 0 0 0-8 8c0 5.25 8 12 8 12s8-6.75 8-12a8 8 0 0 0-8-8z"></path><circle cx="12" cy="10" r="3"></circle></svg>
+            </div>
+            <div class="location-selector-text">Salt Lake Sector V, Kolkata</div>
+            <div class="location-selector-arrow">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
+            </div>
+        </div>
+
+        <!-- Promo Banner -->
+        <div class="promo-banner" style="animation: screenEnter 0.4s 0.05s both;">
+            <div class="promo-banner-dots">
+                <div class="promo-banner-dot cyan"></div>
+                <div class="promo-banner-dot coral"></div>
+            </div>
+            <div class="promo-banner-content">
+                <div class="promo-banner-title">Help is just<br>a <span>tap</span> away.</div>
+                <div class="promo-banner-subtitle">We're here when you need us most</div>
+            </div>
+        </div>
+
+        <!-- Emergency request button card -->
+        <div class="emergency-cta-card" onclick="openAmbulancePortal()" style="animation: screenEnter 0.4s 0.1s both;">
+            <div class="emergency-cta-icon-wrapper">
+                <div class="emergency-cta-icon-bg">
+                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M19 17h2c.6 0 1-.4 1-1v-3c0-.9-.7-1.7-1.5-1.9C18.7 10.6 16 10 16 10s-1.3-1.4-2.2-2.3c-.5-.4-1.1-.7-1.8-.7H5c-.6 0-1.1.4-1.4.9l-1.4 2.9A3.7 3.7 0 0 0 2 12v4c0 .6.4 1 1 1h2"></path><circle cx="7" cy="17" r="2"></circle><path d="M9 17h6"></path><circle cx="17" cy="17" r="2"></circle><path d="M12 6v6"></path><path d="M9 9h6"></path></svg>
+                </div>
+            </div>
+            <div class="emergency-cta-info">
+                <div class="emergency-cta-tag">Emergency</div>
+                <div class="emergency-cta-title">Request Ambulance Now</div>
+                <div class="emergency-cta-subtitle">We'll reach you in minutes</div>
+            </div>
+            <div class="emergency-cta-arrow">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>
+            </div>
+        </div>
+
+
+        <!-- Trust metrics grid card -->
+        <div class="metrics-grid-card" style="animation: screenEnter 0.4s 0.15s both;">
+            <div class="metric-col">
+                <div class="metric-circle-icon blue">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 17h2c.6 0 1-.4 1-1v-3c0-.9-.7-1.7-1.5-1.9C18.7 10.6 16 10 16 10s-1.3-1.4-2.2-2.3c-.5-.4-1.1-.7-1.8-.7H5c-.6 0-1.1.4-1.4.9l-1.4 2.9A3.7 3.7 0 0 0 2 12v4c0 .6.4 1 1 1h2"></path><circle cx="7" cy="17" r="2"></circle><path d="M9 17h6"></path><circle cx="17" cy="17" r="2"></circle></svg>
+                </div>
+                <div class="metric-value">120+</div>
+                <div class="metric-label">Ambulances</div>
+            </div>
+            <div class="metric-col">
+                <div class="metric-circle-icon red">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>
+                </div>
+                <div class="metric-value">24/7</div>
+                <div class="metric-label">Support</div>
+            </div>
+            <div class="metric-col">
+                <div class="metric-circle-icon green">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
+                </div>
+                <div class="metric-value">100%</div>
+                <div class="metric-label">Verified</div>
+            </div>
+            <div class="metric-col">
+                <div class="metric-circle-icon yellow">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon></svg>
+                </div>
+                <div class="metric-value">Instant</div>
+                <div class="metric-label">Response</div>
+            </div>
+        </div>
+
+        <!-- Essential Services Section -->
+        <div class="section-title" style="animation: screenEnter 0.4s 0.2s both;">Essential Services</div>
+        
+        <div class="essential-services-list" style="animation: screenEnter 0.4s 0.25s both;">
+            
+            <div class="service-item-card" onclick="openAmbulancePortal()">
+                <div class="service-icon-bg blue">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M19 17h2c.6 0 1-.4 1-1v-3c0-.9-.7-1.7-1.5-1.9C18.7 10.6 16 10 16 10s-1.3-1.4-2.2-2.3c-.5-.4-1.1-.7-1.8-.7H5c-.6 0-1.1.4-1.4.9l-1.4 2.9A3.7 3.7 0 0 0 2 12v4c0 .6.4 1 1 1h2"></path><circle cx="7" cy="17" r="2"></circle><path d="M9 17h6"></path><circle cx="17" cy="17" r="2"></circle></svg>
+                </div>
+                <div class="service-info">
+                    <div class="service-name">Emergency Booking</div>
+                    <div class="service-desc">Find & request nearest ambulance</div>
+                </div>
+                <div class="service-arrow">›</div>
+            </div>
+            
+            <div class="service-item-card" onclick="toggleChat()">
+                <div class="service-icon-bg purple">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>
+                </div>
+                <div class="service-info">
+                    <div class="service-name">Juhi AI Medical Assistant</div>
+                    <div class="service-desc">Consult symptoms, first aid steps & prices</div>
+                </div>
+                <div class="service-arrow">›</div>
+            </div>
+
+            <div class="service-item-card" onclick="navigate('profile-screen')">
+                <div class="service-icon-bg green">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
+                </div>
+                <div class="service-info">
+                    <div class="service-name">Medical Profile & History</div>
+                    <div class="service-desc">Update emergency contacts & blood details</div>
+                </div>
+                <div class="service-arrow">›</div>
+            </div>
+
+        </div>
+
+    </div>
+
+    <!-- ════════════════ AMBULANCE PORTAL SCREEN ════════════════ -->
+    <div id="ambulance-portal-screen" class="screen" style="padding: 0 !important; overflow: hidden; height: 100%;">
+        <div class="loc-header" style="padding: 12px 16px; border-bottom: 1px solid var(--card-border); flex-shrink: 0; display: flex; align-items: center; gap: 12px;">
+            <span style="cursor:pointer;font-size:20px;color:var(--text-muted);transition:color 0.2s;" onclick="navigate('home-screen')" onmouseover="this.style.color='var(--primary)'" onmouseout="this.style.color='var(--text-muted)'">←</span>
+            <div>
+                <div style="font-weight:700;font-size:17px;line-height:1.2;">Emergency Portal</div>
+                <div style="font-size:12px;color:var(--text-muted);margin-top:2px;">Live ambulance booking & tracking</div>
+            </div>
+        </div>
+        <iframe id="ambulance-portal-iframe" src="" style="width: 100%; flex: 1; border: none;"></iframe>
+    </div>
+
+    <!-- ════════════════ LOCATION SCREEN ════════════════ -->
+
+    <div id="location-screen" class="screen">
+
+        <div class="loc-header">
+
+            <span style="cursor:pointer;font-size:20px;color:var(--text-muted);transition:color 0.2s;" onclick="navigate('home-screen')" onmouseover="this.style.color='var(--primary)'" onmouseout="this.style.color='var(--text-muted)'">←</span>
+
+            <div>
+
+                <div style="font-weight:700;font-size:17px;line-height:1.2;">Select Location</div>
+
+                <div style="font-size:12px;color:var(--text-muted);margin-top:2px;">Confirm your emergency pickup point</div>
+
+            </div>
+
+        </div>
+
+        
+
+        <div class="map-area">
+
+            <div id="loc-map-container" class="real-map"></div>
+
+            <div class="map-controls">
+
+                <button class="map-btn" onclick="locMap && locMap.zoomIn()">+</button>
+
+                <button class="map-btn" onclick="locMap && locMap.zoomOut()">−</button>
+
+            </div>
+
+            <!-- Animated crosshair pin -->
+
+            <div style="position:absolute;top:50%;left:50%;transform:translate(-50%,-60%);z-index:1000;pointer-events:none;display:flex;flex-direction:column;align-items:center;">
+
+                <div class="map-pin-center"></div>
+
+                <div class="map-pin-shadow"></div>
+
+            </div>
+
+            <button class="map-btn round" onclick="locMap && locMap.setView(tollygunge, 15)">
+
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg>
+
+            </button>
+
+        </div>
+
+        <div class="loc-bottom-sheet">
+
+            <div class="search-box">
+
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--text-gray)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+
+                <input type="text" placeholder="Search for a location or landmark">
+
+            </div>
+
+            <div class="loc-item" onclick="navigate('hospital-list-screen')">
+
+                <div class="loc-icon blue">
+
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg>
+
+                </div>
+
+                <div class="loc-text">
+
+                    <strong>Use Current Location</strong>
+
+                    <p>Enable GPS for high accuracy</p>
+
+                </div>
+
+                <div class="loc-arrow">›</div>
+
+            </div>
+
+            <div style="font-weight:700;font-size:12px;margin:14px 4px 6px;color:var(--text-gray);text-transform:uppercase;letter-spacing:0.8px;">Recent</div>
+
+            <div class="loc-item" onclick="navigate('hospital-list-screen')">
+
+                <div class="loc-icon grey">
+
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg>
+
+                </div>
+
+                <div class="loc-text">
+
+                    <strong>Home</strong>
+
+                    <p>Tollygunge, Kolkata — 700033</p>
+
+                </div>
+
+                <div class="loc-arrow">›</div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+    <!-- ════════════════ HOSPITAL LIST SCREEN ════════════════ -->
+
+    <div id="hospital-list-screen" class="screen">
+
+        <div class="loc-header" style="flex-direction:column;align-items:flex-start;">
+
+            <div style="display:flex;align-items:center;gap:14px;width:100%;">
+
+                <span style="cursor:pointer;font-size:20px;color:var(--text-muted);transition:color 0.2s;" onclick="navigate('location-screen')" onmouseover="this.style.color='var(--primary)'" onmouseout="this.style.color='var(--text-muted)'">←</span>
+
+                <div>
+
+                    <div style="font-weight:700;font-size:17px;line-height:1.2;">Nearest Hospitals</div>
+
+                    <div style="font-size:12px;color:var(--text-muted);margin-top:2px;">From your current location</div>
+
+                </div>
+
+            </div>
+
+        </div>
+
+        <div class="map-area" style="flex:0 0 200px;">
+
+            <div id="hosp-map-container" class="real-map"></div>
+
+        </div>
+
+        <div class="loc-bottom-sheet" style="flex:1;overflow-y:auto;padding-bottom:24px;">
+
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
+
+                <h3 style="margin:0;font-size:17px;font-weight:700;font-family:var(--font-heading);color:var(--text-main);">Available Hospitals</h3>
+
+                <span style="color:var(--primary);font-size:13px;font-weight:600;cursor:pointer;padding:4px 10px;border-radius:8px;border:1px solid rgba(0,209,255,0.2);background:rgba(0,209,255,0.05);">Filter</span>
+
+            </div>
+
+            <!-- Hospital Card 1 - M R Bangur -->
+
+            <div class="hospital-card" onclick="toggleHospitalCard(this); navigate('booking-screen')">
+
+                <div class="h-icon-wrapper">
+
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 17h2c.6 0 1-.4 1-1v-3c0-.9-.7-1.7-1.5-1.9C18.7 10.6 16 10 16 10s-1.3-1.4-2.2-2.3c-.5-.4-1.1-.7-1.8-.7H5c-.6 0-1.1.4-1.4.9l-1.4 2.9A3.7 3.7 0 0 0 2 12v4c0 .6.4 1 1 1h2"></path><circle cx="7" cy="17" r="2"></circle><path d="M9 17h6"></path><circle cx="17" cy="17" r="2"></circle></svg>
+
+                </div>
+
+                <div class="h-content">
+
+                    <div class="h-header">
+
+                        <h4 class="h-title">M R Bangur Hospital</h4>
+
+                        <span class="h-arrow">›</span>
+
+                    </div>
+
+                    <div class="h-rating"><span class="h-rating-star">★</span> 4.5 <span style="color:var(--text-gray);font-size:11px;">(312 reviews)</span></div>
+
+                    <div class="h-metrics">
+
+                        <div class="h-metric-item"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg> 0.8 km</div>
+
+                        <div class="h-metric-item"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg> 3–5 min ETA</div>
+
+                    </div>
+
+                    <div class="h-address">Deshapran Sasmal Road, Tollygunge</div>
+
+                    <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
+
+                        <div class="h-badge"><div class="h-badge-dot"></div>6 ambulances ready</div>
+
+                        <span style="font-size:12px;font-weight:700;color:var(--accent-green);">₹1,200</span>
+
+                    </div>
+
+                    <div class="h-expand-details">
+
+                        <div style="margin-top:8px;font-size:12px;color:var(--text-muted);">Specialisations:</div>
+
+                        <span class="h-spec-badge">ICU</span><span class="h-spec-badge">Cardiac</span><span class="h-spec-badge">Trauma</span><span class="h-spec-badge">Neuro</span>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+            <!-- Hospital Card 2 - RSV -->
+
+            <div class="hospital-card" onclick="toggleHospitalCard(this); navigate('booking-screen')">
+
+                <div class="h-icon-wrapper">
+
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 17h2c.6 0 1-.4 1-1v-3c0-.9-.7-1.7-1.5-1.9C18.7 10.6 16 10 16 10s-1.3-1.4-2.2-2.3c-.5-.4-1.1-.7-1.8-.7H5c-.6 0-1.1.4-1.4.9l-1.4 2.9A3.7 3.7 0 0 0 2 12v4c0 .6.4 1 1 1h2"></path><circle cx="7" cy="17" r="2"></circle><path d="M9 17h6"></path><circle cx="17" cy="17" r="2"></circle></svg>
+
+                </div>
+
+                <div class="h-content">
+
+                    <div class="h-header">
+
+                        <h4 class="h-title">RSV Hospital</h4>
+
+                        <span class="h-arrow">›</span>
+
+                    </div>
+
+                    <div class="h-rating"><span class="h-rating-star">★</span> 4.7 <span style="color:var(--text-gray);font-size:11px;">(189 reviews)</span></div>
+
+                    <div class="h-metrics">
+
+                        <div class="h-metric-item"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg> 1.1 km</div>
+
+                        <div class="h-metric-item"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg> 5–7 min ETA</div>
+
+                    </div>
+
+                    <div class="h-address">Deshapran Sasmal Road, Tollygunge</div>
+
+                    <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
+
+                        <div class="h-badge"><div class="h-badge-dot"></div>3 ambulances ready</div>
+
+                        <span style="font-size:12px;font-weight:700;color:var(--accent-green);">₹1,400</span>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+            <!-- Hospital Card 3 - AMRI -->
+
+            <div class="hospital-card" onclick="toggleHospitalCard(this); navigate('booking-screen')">
+
+                <div class="h-icon-wrapper">
+
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 17h2c.6 0 1-.4 1-1v-3c0-.9-.7-1.7-1.5-1.9C18.7 10.6 16 10 16 10s-1.3-1.4-2.2-2.3c-.5-.4-1.1-.7-1.8-.7H5c-.6 0-1.1.4-1.4.9l-1.4 2.9A3.7 3.7 0 0 0 2 12v4c0 .6.4 1 1 1h2"></path><circle cx="7" cy="17" r="2"></circle><path d="M9 17h6"></path><circle cx="17" cy="17" r="2"></circle></svg>
+
+                </div>
+
+                <div class="h-content">
+
+                    <div class="h-header">
+
+                        <h4 class="h-title">AMRI Hospital Dhakuria</h4>
+
+                        <span class="h-arrow">›</span>
+
+                    </div>
+
+                    <div class="h-rating"><span class="h-rating-star">★</span> 4.6 <span style="color:var(--text-gray);font-size:11px;">(445 reviews)</span></div>
+
+                    <div class="h-metrics">
+
+                        <div class="h-metric-item"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg> 3.2 km</div>
+
+                        <div class="h-metric-item"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg> 10–12 min ETA</div>
+
+                    </div>
+
+                    <div class="h-address">Gariahat Road, Dhakuria</div>
+
+                    <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
+
+                        <div class="h-badge" style="background:rgba(245,158,11,0.08);border-color:rgba(245,158,11,0.2);color:var(--accent-yellow);"><div class="h-badge-dot" style="background:var(--accent-yellow);box-shadow:0 0 6px var(--accent-yellow);"></div>2 ambulances ready</div>
+
+                        <span style="font-size:12px;font-weight:700;color:var(--accent-green);">₹1,800</span>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+    <!-- ════════════════ PATIENT DETAILS SCREEN ════════════════ -->
+
+    <div id="booking-screen" class="screen">
+
+        <!-- Top back nav -->
+
+        <div style="display:flex;align-items:center;gap:12px;margin-bottom:20px;">
+
+            <span style="cursor:pointer;font-size:20px;color:var(--text-muted);" onclick="navigate('hospital-list-screen')">←</span>
+
+            <span style="font-size:18px;font-weight:800;font-family:var(--font-heading);color:var(--text-main);">Patient Details</span>
+
+        </div>
+
+        <!-- Step Progress Tracker -->
+
+        <div class="step-tracker">
+
+            <div class="step-line-active" id="step-progress-line" style="width:50%;"></div>
+
+            <div class="step-item complete">
+
+                <div class="step-dot">✓</div>
+
+                <span class="step-label">Location</span>
+
+            </div>
+
+            <div class="step-item complete">
+
+                <div class="step-dot">✓</div>
+
+                <span class="step-label">Hospital</span>
+
+            </div>
+
+            <div class="step-item active">
+
+                <div class="step-dot">3</div>
+
+                <span class="step-label">Details</span>
+
+            </div>
+
+            <div class="step-item">
+
+                <div class="step-dot">4</div>
+
+                <span class="step-label">Payment</span>
+
+            </div>
+
+        </div>
+
+        <div class="generic-card">
+
+            <h3 style="font-family:var(--font-heading);color:var(--primary);margin-bottom:8px;font-size:16px;font-weight:700;">Emergency Severity</h3>
+
+            <div class="severity-selector">
+
+                <div class="severity-pill minor" onclick="setSeverity(this,'minor')">🟦 Minor</div>
+
+                <div class="severity-pill urgent active" onclick="setSeverity(this,'urgent')">🟡 Urgent</div>
+
+                <div class="severity-pill critical" onclick="setSeverity(this,'critical')">🔴 Critical</div>
+
+            </div>
+
+            <h3 style="font-family:var(--font-heading);color:var(--text-muted);margin-bottom:10px;font-size:13px;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;">Quick Condition Select</h3>
+
+            <div class="chips-container">
+
+                <span class="chip-pill" onclick="toggleChip(this)">🫀 Cardiac</span>
+
+                <span class="chip-pill active" onclick="toggleChip(this)">🩸 Bleeding</span>
+
+                <span class="chip-pill" onclick="toggleChip(this)">🧠 Stroke</span>
+
+                <span class="chip-pill" onclick="toggleChip(this)">🦴 Fracture</span>
+
+                <span class="chip-pill" onclick="toggleChip(this)">🤰 Maternity</span>
+
+                <span class="chip-pill" onclick="toggleChip(this)">😮‍💨 Breathing</span>
+
+            </div>
+
+            <h3 style="font-family:var(--font-heading);color:var(--primary);margin-bottom:16px;font-size:16px;font-weight:700;">Patient Information</h3>
+
+            <input type="text" id="patient-name" placeholder="Patient Full Name" required>
+
+            <input type="tel" id="patient-phone" placeholder="Contact Phone Number" required pattern="[0-9]{10}">
+
+            <div style="display:flex;gap:10px;">
+
+                <input type="number" id="patient-age" placeholder="Age" style="flex:1;" required>
+
+                <select id="patient-gender" style="flex:1;">
+
+                    <option value="" disabled selected>Gender</option>
+
+                    <option value="male">Male</option>
+
+                    <option value="female">Female</option>
+
+                    <option value="other">Other</option>
+
+                </select>
+
+            </div>
+
+            <textarea id="patient-notes" placeholder="Symptoms / Conditions / Additional Notes (Optional)" rows="3" style="height:auto;resize:none;margin-bottom:0;"></textarea>
+
+            <label style="color:var(--text-muted);font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;display:block;margin:16px 0 8px;">Ambulance Type</label>
+
+            <select id="type">
+
+                <option value="Basic Life Support">Basic Life Support (BLS)</option>
+
+                <option value="Advanced Life Support">Advanced Life Support (ALS) — ICU</option>
+
+                <option value="Neonatal">Neonatal Ambulance (Incubator)</option>
+
+                <option value="Patient Transport">Patient Transport (Non-Emergency)</option>
+
+                <option value="Mortuary">Mortuary Ambulance (Hearse)</option>
+
+            </select>
+
+        </div>
+
+        <button class="btn-primary" onclick="navigate('payment-screen')" style="margin-bottom:8px;">
+
+            Proceed to Payment
+
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>
+
+        </button>
+
+    </div>
+
+    <!-- ════════════════ PAYMENT SCREEN ════════════════ -->
+
+    <div id="payment-screen" class="screen">
+
+        <div style="display:flex;align-items:center;gap:12px;margin-bottom:20px;">
+
+            <span style="cursor:pointer;font-size:20px;color:var(--text-muted);" onclick="navigate('booking-screen')">←</span>
+
+            <span style="font-size:18px;font-weight:800;font-family:var(--font-heading);color:var(--text-main);">Secure Payment</span>
+
+        </div>
+
+        <!-- Step Progress Tracker -->
+
+        <div class="step-tracker">
+
+            <div class="step-line-active" style="width:100%;"></div>
+
+            <div class="step-item complete"><div class="step-dot">✓</div><span class="step-label">Location</span></div>
+
+            <div class="step-item complete"><div class="step-dot">✓</div><span class="step-label">Hospital</span></div>
+
+            <div class="step-item complete"><div class="step-dot">✓</div><span class="step-label">Details</span></div>
+
+            <div class="step-item active"><div class="step-dot">4</div><span class="step-label">Payment</span></div>
+
+        </div>
+
+        <!-- Card Visualizer -->
+
+        <div class="payment-card-visualizer">
+
+            <div style="display:flex;justify-content:space-between;align-items:flex-start;">
+
+                <div class="card-chip"></div>
+
+                <div class="network-brand">resQ</div>
+
+            </div>
+
+            <div class="card-number">●●●● ●●●● ●●●● 1234</div>
+
+            <div class="card-bottom">
+
+                <div>
+
+                    <div style="font-size:10px;opacity:0.6;">CARD HOLDER</div>
+
+                    <div class="card-holder-name">Demo User</div>
+
+                </div>
+
+                <div style="text-align:right;">
+
+                    <div style="font-size:10px;opacity:0.6;">EXPIRES</div>
+
+                    <div class="card-holder-name">12/28</div>
+
+                </div>
+
+            </div>
+
+        </div>
+
+        <div class="generic-card">
+
+            <!-- Trust indicators -->
+
+            <div style="display:flex;align-items:center;gap:8px;margin-bottom:16px;padding:10px 12px;background:rgba(16,185,129,0.06);border:1px solid rgba(16,185,129,0.12);border-radius:12px;">
+
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--accent-green)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg>
+
+                <span style="font-size:12px;font-weight:600;color:var(--accent-green);">256-bit SSL Encrypted · RBI Compliant · PCI-DSS Secure</span>
+
+            </div>
+
+            <h3 style="font-family:var(--font-heading);color:var(--text-main);margin-bottom:14px;font-size:16px;">Fare Breakdown</h3>
+
+            <div style="display:flex;justify-content:space-between;font-size:14px;color:var(--text-muted);margin-bottom:10px;padding-bottom:10px;border-bottom:1px solid rgba(255,255,255,0.04);">
+
+                <span>Base Fare (BLS)</span><span style="color:var(--text-main);">₹800</span>
+
+            </div>
+
+            <div style="display:flex;justify-content:space-between;font-size:14px;color:var(--text-muted);margin-bottom:10px;padding-bottom:10px;border-bottom:1px solid rgba(255,255,255,0.04);">
+
+                <span>Distance (0.8 km)</span><span style="color:var(--text-main);">₹200</span>
+
+            </div>
+
+            <div style="display:flex;justify-content:space-between;font-size:14px;color:var(--text-muted);margin-bottom:16px;padding-bottom:16px;border-bottom:1px dashed rgba(255,255,255,0.08);">
+
+                <span>Priority Routing</span><span style="color:var(--text-main);">₹200</span>
+
+            </div>
+
+            <div style="display:flex;justify-content:space-between;font-weight:800;font-size:22px;font-family:var(--font-heading);color:var(--primary);margin-bottom:20px;">
+
+                <span>Total</span><span>₹1,200</span>
+
+            </div>
+
+            <label style="color:var(--text-muted);font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;display:block;margin-bottom:10px;">Payment Method</label>
+
+            <select id="payment-method" onchange="togglePaymentFields()">
+
+                <option value="upi">UPI (GPay / PhonePe / Paytm)</option>
+
+                <option value="card">Credit / Debit Card</option>
+
+                <option value="cash">Cash on Arrival</option>
+
+            </select>
+
+            <div id="upi-fields">
+
+                <input type="text" placeholder="Enter UPI ID (e.g., name@okaxis)">
+
+            </div>
+
+            <div id="card-fields" style="display:none;">
+
+                <input type="text" placeholder="Card Number (16 digits)" maxlength="19">
+
+                <div style="display:flex;gap:10px;">
+
+                    <input type="text" placeholder="MM/YY" maxlength="5" style="flex:1;">
+
+                    <input type="password" placeholder="CVV" maxlength="3" style="flex:1;">
+
+                </div>
+
+            </div>
+
+            <div id="cash-fields" style="display:none;margin-bottom:16px;padding:14px;background:rgba(255,255,255,0.02);border:1px solid var(--card-border);border-radius:12px;font-size:13px;color:var(--text-muted);">
+
+                ℹ️ Please prepare <strong style="color:var(--text-main);">₹1,200</strong> in exact change to pay the driver on arrival.
+
+            </div>
+
+            <button class="btn-primary" onclick="processPayment()" id="pay-btn" style="margin-top:8px;">
+
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg>
+
+                Pay & Confirm ₹1,200
+
+            </button>
+
+        </div>
+
+        <button style="background:transparent;color:var(--text-muted);border:none;width:100%;font-size:14px;font-weight:600;cursor:pointer;padding:10px;margin-top:-8px;" onclick="navigate('booking-screen')">← Go Back</button>
+
+    </div>
+
+    <!-- ════════════════ TRACKING SCREEN ════════════════ -->
+
+    <div id="tracking-screen" class="screen" style="padding-bottom:24px;">
+
+        <!-- Traffic Banner -->
+
+        <div id="traffic-banner" style="background:rgba(0,209,255,0.07);border:1px solid rgba(0,209,255,0.2);padding:12px 16px;border-radius:14px;margin-bottom:16px;font-size:13px;font-weight:600;display:flex;align-items:center;gap:10px;color:var(--primary);transition:all 0.5s ease;">
+
+            <div style="width:8px;height:8px;background:var(--primary);border-radius:50%;animation:breathing-glow 1s infinite alternate;flex-shrink:0;box-shadow:0 0 8px var(--primary);"></div>
+
+            <span id="traffic-text">Connecting to Traffic Control IoT...</span>
+
+        </div>
+
+        <!-- Tracking Map -->
+
+        <div class="map-area" style="min-height:220px;border-radius:20px;margin-bottom:16px;overflow:hidden;box-shadow:0 0 25px rgba(0,209,255,0.1),0 8px 20px rgba(0,0,0,0.3);border:1px solid var(--card-border);">
+
+            <div id="track-map-container" class="real-map"></div>
+
+        </div>
+
+        <!-- Driver & ETA Card -->
+
+        <div class="generic-card" style="text-align:center;padding:20px;">
+
+            <div style="display:flex;align-items:center;gap:16px;margin-bottom:16px;padding-bottom:16px;border-bottom:1px solid rgba(255,255,255,0.06);">
+
+                <div class="driver-avatar">
+
+                    <svg viewBox="0 0 36 36" fill="none" xmlns="http://www.w3.org/2000/svg" style="width:100%;height:100%;margin-top:8px;">
+
+                        <circle cx="18" cy="12" r="6" fill="var(--primary)"/>
+
+                        <path d="M18 20C11.3726 20 6 25.3726 6 32H30C30 25.3726 24.6274 20 18 20Z" fill="var(--primary)"/>
+
+                    </svg>
+
+                </div>
+
+                <div style="text-align:left;flex:1;">
+
+                    <p style="margin:0;font-size:17px;font-weight:800;font-family:var(--font-heading);color:var(--text-main);">Rajesh Das</p>
+
+                    <p style="margin:3px 0 0;font-size:12px;color:var(--text-muted);">⭐ 4.8 · 120+ Life-saving trips</p>
+
+                    <a href="tel:+919876543210" style="margin:6px 0 0;font-size:13px;font-weight:700;color:var(--primary);text-decoration:none;display:block;">📞 +91 98765 43210</a>
+
+                </div>
+
+                <!-- Vehicle badge -->
+
+                <div style="background:rgba(255,255,255,0.04);border:1px solid var(--card-border);border-radius:8px;padding:6px 10px;text-align:center;">
+
+                    <div style="font-size:10px;color:var(--text-gray);text-transform:uppercase;letter-spacing:0.5px;">Vehicle</div>
+
+                    <div style="font-size:13px;font-weight:700;color:var(--text-main);font-family:var(--font-heading);">WB-04-E-1234</div>
+
+                </div>
+
+            </div>
+
+            <p style="font-size:13px;color:var(--text-muted);margin-bottom:4px;" id="tracking-title">Ambulance En Route</p>
+
+            <h1 style="font-family:var(--font-heading);font-size:52px;font-weight:800;margin:8px 0;color:var(--primary);text-shadow:0 0 20px var(--primary-glow);letter-spacing:-2px;" id="eta">8 Min</h1>
+
+            <p id="eta-subtitle" style="color:var(--text-muted);font-size:14px;margin-bottom:0;">Away from your location</p>
+
+            <button id="phase2-btn" class="btn-primary" style="margin-top:16px;display:none;" onclick="startTrackingPhase2()">
+
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
+
+                Start Journey to Hospital
+
+            </button>
+
+        </div>
+
+    </div>
+
+    <!-- ════════════════ REVIEW / SUCCESS SCREEN ════════════════ -->
+
+    <div id="review-screen" class="screen">
+
+        <h2 style="font-family:var(--font-heading);color:var(--accent-green);font-size:24px;font-weight:800;margin-bottom:4px;text-align:center;">Trip Complete 🎉</h2>
+
+        <p style="color:var(--text-muted);text-align:center;font-size:14px;margin-bottom:20px;">Patient transferred safely to Emergency Ward</p>
+
+        <!-- Dispatch animation sequence -->
+
+        <div class="generic-card" style="text-align:center;padding:24px 20px;margin-bottom:16px;">
+
+            <div class="dispatch-anim-container" id="dispatch-anim">
+
+                <div class="dispatch-line" style="left:calc(50% - 70px);"></div>
+
+                <div class="dispatch-line-active" id="dispatch-active-line" style="left:calc(50% - 70px);"></div>
+
+                <div class="dispatch-node complete" id="disp-1">
+
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
+
+                </div>
+
+                <div class="dispatch-node complete" id="disp-2">🚑</div>
+
+                <div class="dispatch-node complete" id="disp-3">🏥</div>
+
+            </div>
+
+            <p style="font-size:14px;font-weight:700;font-family:var(--font-heading);color:var(--accent-green);margin-bottom:4px;">All systems confirmed!</p>
+
+            <p style="font-size:13px;color:var(--text-muted);">Emergency response completed in record time</p>
+
+        </div>
+
+        <div class="generic-card" style="text-align:center;padding:24px 20px;">
+
+            <h3 style="font-family:var(--font-heading);margin-bottom:6px;color:var(--text-main);font-size:17px;">How was your experience?</h3>
+
+            <p style="font-size:13px;color:var(--text-muted);margin-bottom:20px;">Your feedback shapes emergency response for thousands</p>
+
+            <div class="star-rating" style="font-size:40px;margin-bottom:20px;cursor:pointer;display:flex;justify-content:center;gap:6px;">
+
+                <span id="star-1" onclick="rateStar(1)" style="color:rgba(255,255,255,0.1);transition:all 0.2s;">★</span>
+
+                <span id="star-2" onclick="rateStar(2)" style="color:rgba(255,255,255,0.1);transition:all 0.2s;">★</span>
+
+                <span id="star-3" onclick="rateStar(3)" style="color:rgba(255,255,255,0.1);transition:all 0.2s;">★</span>
+
+                <span id="star-4" onclick="rateStar(4)" style="color:rgba(255,255,255,0.1);transition:all 0.2s;">★</span>
+
+                <span id="star-5" onclick="rateStar(5)" style="color:rgba(255,255,255,0.1);transition:all 0.2s;">★</span>
+
+            </div>
+
+            <textarea placeholder="Tell us how we can save more lives (optional)" style="width:100%;padding:14px;border:1px solid var(--card-border);border-radius:14px;background:rgba(255,255,255,0.02);margin-bottom:16px;outline:none;resize:none;height:90px;color:var(--text-main);font-family:var(--font-body);font-size:14px;"></textarea>
+
+            <button class="btn-primary" onclick="submitReview()">Submit Feedback</button>
+
+        </div>
+
+    </div>
+
+    <!-- ════════════════ PROFILE SCREEN ════════════════ -->
+
+    <div id="profile-screen" class="screen">
+
+        <div style="display:flex;align-items:center;gap:12px;margin-bottom:20px;">
+
+            <span style="cursor:pointer;font-size:20px;color:var(--text-muted);" onclick="navigate('home-screen')">←</span>
+
+            <span style="font-size:18px;font-weight:800;font-family:var(--font-heading);color:var(--text-main);">My Profile</span>
+
+        </div>
+
+        <div class="generic-card" style="text-align:center;margin-bottom:16px;">
+
+            <div style="width:76px;height:76px;border-radius:50%;background:rgba(0,209,255,0.1);border:2px solid rgba(0,209,255,0.3);color:var(--primary);display:flex;align-items:center;justify-content:center;margin:0 auto 14px;font-size:26px;font-weight:800;font-family:var(--font-heading);box-shadow:0 0 20px rgba(0,209,255,0.15);" id="profile-initials">DU</div>
+
+            <h3 id="display-name" style="margin-bottom:4px;color:var(--text-main);font-family:var(--font-heading);font-size:18px;">Demo User</h3>
+
+            <p id="display-phone" style="color:var(--text-muted);font-size:14px;">+91 9876543210</p>
+
+        </div>
+
+        <!-- View Mode -->
+
+        <div class="generic-card" id="profile-view-mode">
+
+            <div style="display:flex;justify-content:space-between;margin-bottom:14px;padding-bottom:14px;border-bottom:1px solid rgba(255,255,255,0.05);">
+
+                <span style="color:var(--text-muted);font-size:14px;">Blood Group</span>
+
+                <strong id="display-blood" style="color:var(--accent-red);font-size:14px;">O+</strong>
+
+            </div>
+
+            <div style="display:flex;justify-content:space-between;margin-bottom:14px;padding-bottom:14px;border-bottom:1px solid rgba(255,255,255,0.05);">
+
+                <span style="color:var(--text-muted);font-size:14px;">Emergency Contact</span>
+
+                <strong id="display-em-contact" style="color:var(--text-main);font-size:14px;">+91 1122334455</strong>
+
+            </div>
+
+            <div style="display:flex;justify-content:space-between;margin-bottom:20px;">
+
+                <span style="color:var(--text-muted);font-size:14px;">Medical History</span>
+
+                <strong id="display-history" style="color:var(--text-main);font-size:14px;">None</strong>
+
+            </div>
+
+            <button class="btn-primary" onclick="toggleProfileEdit()" style="background:rgba(0,209,255,0.08);color:var(--primary);border:1px solid rgba(0,209,255,0.25);box-shadow:none;margin-bottom:12px;">Edit Profile</button>
+
+            <!-- resQ Smart Safety Navigation Rows -->
+            <div style="border-top:1px dashed rgba(255,255,255,0.08); padding-top:12px; margin-top:12px; display:flex; flex-direction:column; gap:8px;">
+                <div class="loc-item" onclick="navigate('contacts-screen')" style="padding:10px 8px; cursor:pointer; border-radius:12px; background:rgba(255,255,255,0.01); border:1px solid rgba(255,255,255,0.02);">
+                    <div class="loc-icon blue" style="width:30px; height:30px; border-radius:8px; display:flex; align-items:center; justify-content:center; background:rgba(0,209,255,0.08); color:var(--primary); font-size:14px; flex-shrink:0;">👥</div>
+                    <div class="loc-text" style="flex:1; margin-left:12px; text-align:left;">
+                        <strong style="font-size:13px; color:var(--text-main); display:block;">Emergency Contacts</strong>
+                        <span style="font-size:11px; color:var(--text-muted);">Manage family & safety notifies</span>
+                    </div>
+                    <div class="loc-arrow" style="color:var(--text-gray); font-size:16px;">›</div>
+                </div>
+
+                <div class="loc-item" onclick="navigate('settings-screen')" style="padding:10px 8px; cursor:pointer; border-radius:12px; background:rgba(255,255,255,0.01); border:1px solid rgba(255,255,255,0.02);">
+                    <div class="loc-icon grey" style="width:30px; height:30px; border-radius:8px; display:flex; align-items:center; justify-content:center; background:rgba(255,255,255,0.04); color:var(--text-muted); font-size:14px; flex-shrink:0;">⚙️</div>
+                    <div class="loc-text" style="flex:1; margin-left:12px; text-align:left;">
+                        <strong style="font-size:13px; color:var(--text-main); display:block;">Safety Settings</strong>
+                        <span style="font-size:11px; color:var(--text-muted);">Crash sensitivity & siren overrides</span>
+                    </div>
+                    <div class="loc-arrow" style="color:var(--text-gray); font-size:16px;">›</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Edit Mode -->
+
+        <div class="generic-card" id="profile-edit-mode" style="display:none;">
+
+            <label style="font-size:12px;color:var(--text-muted);font-weight:700;text-transform:uppercase;letter-spacing:0.5px;">Full Name</label>
+
+            <input type="text" id="edit-name" value="Demo User">
+
+            <label style="font-size:12px;color:var(--text-muted);font-weight:700;text-transform:uppercase;letter-spacing:0.5px;">Phone Number</label>
+
+            <input type="tel" id="edit-phone" value="+91 9876543210">
+
+            <label style="font-size:12px;color:var(--text-muted);font-weight:700;text-transform:uppercase;letter-spacing:0.5px;">Blood Group</label>
+
+            <select id="edit-blood">
+
+                <option>A+</option><option>A-</option><option>B+</option><option>B-</option>
+
+                <option selected>O+</option><option>O-</option><option>AB+</option><option>AB-</option>
+
+            </select>
+
+            <label style="font-size:12px;color:var(--text-muted);font-weight:700;text-transform:uppercase;letter-spacing:0.5px;">Emergency Contact</label>
+
+            <input type="tel" id="edit-em-contact" value="+91 1122334455">
+
+            <label style="font-size:12px;color:var(--text-muted);font-weight:700;text-transform:uppercase;letter-spacing:0.5px;">Medical History</label>
+
+            <textarea id="edit-history" rows="2">None</textarea>
+
+            <div style="display:flex;gap:10px;margin-top:6px;">
+
+                <button class="btn-primary" onclick="toggleProfileEdit()" style="flex:1;background:rgba(255,255,255,0.04);color:var(--text-muted);box-shadow:none;border:1px solid var(--card-border);">Cancel</button>
+
+                <button class="btn-primary" onclick="saveProfile()" style="flex:2;">Save Details</button>
+
+            </div>
+
+        </div>
+
+    </div>
+
+    <!-- ════════════════ AI CHATBOT (JUHI) ════════════════ -->
+    <div id="chatbot-btn" onclick="toggleChat()" title="Chat with Juhi AI" style="width: auto !important; height: 48px !important; border-radius: 24px !important; padding: 0 18px !important; display: flex; align-items: center; gap: 8px; font-weight: 700; font-size: 13px; font-family: var(--font-heading); white-space: nowrap; box-shadow: 0 8px 24px rgba(0, 209, 255, 0.35);">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>
+        <span>AI Help</span>
+    </div>
+
+    <!-- ════════════════ NEED BLOOD (RAKTAMITRA) ════════════════ -->
+    <div id="blood-btn" onclick="openBloodPortal()" title="Request or Donate Blood" style="width: auto !important; height: 48px !important; border-radius: 24px !important; padding: 0 18px !important; display: flex; align-items: center; gap: 8px; font-weight: 700; font-size: 13px; font-family: var(--font-heading); white-space: nowrap; box-shadow: 0 8px 24px rgba(193, 0, 21, 0.35);">
+        <svg width="16" height="18" viewBox="0 0 384 512" fill="currentColor" style="filter: drop-shadow(0 2px 4px rgba(0,0,0,0.15));"><path d="M192 512C86 512 0 426 0 320C0 228.8 130.2 57.7 176.6 8.5C185 0 199 0 207.4 8.5C253.8 57.7 384 228.8 384 320C384 426 298 512 192 512Z"></path></svg>
+        <span>Need Blood</span>
+    </div>
+
+    <!-- ════════════════ AI CHATBOT SCREEN ════════════════ -->
+    <div id="chatbot-screen" class="screen" style="padding: 0 !important; overflow: hidden; height: 100%;">
+        <div class="loc-header" style="padding: 12px 16px; border-bottom: 1px solid var(--card-border); flex-shrink: 0; display: flex; align-items: center; gap: 12px;">
+            <span style="cursor:pointer;font-size:20px;color:var(--text-muted);transition:color 0.2s;" onclick="navigate('home-screen')" onmouseover="this.style.color='var(--primary)'" onmouseout="this.style.color='var(--text-muted)'">←</span>
+            <div>
+                <div style="font-weight:700;font-size:17px;line-height:1.2;">Juhi AI Assistant</div>
+                <div style="font-size:12px;color:var(--text-muted);margin-top:2px;">Consult symptoms & first aid</div>
+            </div>
+        </div>
+        <iframe id="chatbot-iframe" src="" style="width: 100%; flex: 1; border: none; background: transparent;"></iframe>
+    </div>
+
+    <!-- ════════════════ BLOOD PORTAL SCREEN ════════════════ -->
+    <div id="blood-portal-screen" class="screen" style="padding: 0 !important; overflow: hidden; height: 100%;">
+        <div class="loc-header" style="padding: 12px 16px; border-bottom: 1px solid var(--card-border); flex-shrink: 0; display: flex; align-items: center; gap: 12px;">
+            <span style="cursor:pointer;font-size:20px;color:var(--text-muted);transition:color 0.2s;" onclick="navigate('home-screen')" onmouseover="this.style.color='var(--primary)'" onmouseout="this.style.color='var(--text-muted)'">←</span>
+            <div>
+                <div style="font-weight:700;font-size:17px;line-height:1.2;">resQ Blood Network</div>
+                <div style="font-size:12px;color:var(--text-muted);margin-top:2px;">Request or donate blood near you</div>
+            </div>
+        </div>
+        <iframe id="blood-portal-iframe" src="" style="width: 100%; flex: 1; border: none; background: #0a0002;"></iframe>
+    </div>
+
+    <!-- ════════════════ SETTINGS SCREEN ════════════════ -->
+    <div id="settings-screen" class="screen">
+        <div style="display:flex;align-items:center;gap:12px;margin-bottom:20px;margin-top:4px;">
+            <span style="cursor:pointer;font-size:20px;color:var(--text-muted);" onclick="navigate('home-screen')">←</span>
+            <span style="font-size:18px;font-weight:800;font-family:var(--font-heading);color:var(--text-main);">Smart Safety Settings</span>
+        </div>
+
+        <div class="generic-card">
+            <div style="display:flex; align-items:center; gap:12px; margin-bottom:18px;">
+                <div class="service-icon-bg red" style="width:36px; height:36px; border-radius:10px; background:rgba(239, 68, 68, 0.08); color:#EF4444; font-size:16px;">🚨</div>
+                <div style="text-align:left;">
+                    <h3 style="font-family:var(--font-heading); font-size:15px; font-weight:700; color:var(--text-main);">Collision Detection</h3>
+                    <p style="font-size:11px; color:var(--text-gray);">Use device motion sensors for crash detection</p>
+                </div>
+            </div>
+
+            <div class="setting-item-row">
+                <span class="setting-label">Enable Auto-Detection</span>
+                <label class="resq-switch">
+                    <input type="checkbox" id="setting-auto-detect" checked>
+                    <span class="switch-slider"></span>
+                </label>
+<div class="setting-item-row" style="flex-direction:column; align-items:stretch; gap:8px;">
+                <div style="display:flex; justify-content:space-between; width:100%;">
+                    <span class="setting-label">Impact Sensitivity</span>
+                    <span class="setting-value-lbl" id="lbl-setting-sensitivity">Medium (4.5G)</span>
+                </div>
+                <input type="range" id="setting-sensitivity-range" min="1" max="3" value="2" class="resq-slider">
+                <div style="display:flex; justify-content:space-between; font-size:10px; color:var(--text-gray); width:100%;">
+                    <span>Low (8.0G)</span>
+                    <span>Medium (4.5G)</span>
+                    <span>High (2.2G)</span>
+                </div>
+            </div>
+
+            <div class="setting-item-row" style="flex-direction:column; align-items:stretch; gap:8px; margin-top:10px;">
+                <div style="display:flex; justify-content:space-between; width:100%;">
+                    <span class="setting-label">SOS Countdown Timer</span>
+                    <span class="setting-value-lbl" id="lbl-setting-countdown">10 seconds</span>
+                </div>
+                <input type="range" id="setting-countdown-range" min="5" max="30" step="5" value="10" class="resq-slider">
+            </div>
+        </div>
+
+        <div class="generic-card" style="margin-top:16px;">
+            <h3 style="font-family:var(--font-heading); font-size:14px; font-weight:700; color:var(--primary); margin-bottom:12px; text-align:left;">Alert Feedback</h3>
+            
+            <div class="setting-item-row">
+                <div style="text-align:left;">
+                    <span class="setting-label" style="display:block;">Siren Audio Alert</span>
+                    <span style="font-size:10px; color:var(--text-gray);">Play high-pitch siren warning beep</span>
+                </div>
+                <label class="resq-switch">
+                    <input type="checkbox" id="setting-sound" checked>
+                    <span class="switch-slider"></span>
+                </label>
+            </div>
+
+            <div class="setting-item-row">
+                <div style="text-align:left;">
+                    <span class="setting-label" style="display:block;">Device Vibration</span>
+                    <span style="font-size:10px; color:var(--text-gray);">Haptic warning vibration sequence</span>
+                </div>
+                <label class="resq-switch">
+                    <input type="checkbox" id="setting-vibrate" checked>
+                    <span class="switch-slider"></span>
+                </label>
+            </div>
+            
+            <div class="setting-item-row">
+                <div style="text-align:left;">
+                    <span class="setting-label" style="display:block;">Auto SOS SMS Notifications</span>
+                    <span style="font-size:10px; color:var(--text-gray);">Send GPS locations to contacts automatically</span>
+                </div>
+                <label class="resq-switch">
+                    <input type="checkbox" id="setting-autosms" checked>
+                    <span class="switch-slider"></span>
+                </label>
+            </div>
+        </div>
+
+        <!-- Telemetry & Diagnostics Dashboard -->
+        <div class="generic-card" style="margin-top:16px; text-align:left;">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:14px;">
+                <h3 style="font-family:var(--font-heading); font-size:14px; font-weight:700; color:var(--primary);">Sensor Telemetry & Health</h3>
+                <div class="header-status" id="telemetry-engine-status" style="background:rgba(100,116,139,0.08); border-color:rgba(255,255,255,0.08); color:var(--text-gray); padding:3px 8px; font-size:10px;">
+                    <div class="header-status-dot" id="telemetry-status-dot" style="background:var(--text-gray); box-shadow:none;"></div>
+                    <span id="telemetry-status-lbl">Inactive</span>
+                </div>
+            </div>
+            
+            <!-- Connection & Listener Status -->
+            <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:10px;">
+                <div style="background:rgba(255,255,255,0.02); border:1px solid rgba(255,255,255,0.06); border-radius:12px; padding:8px; text-align:center;">
+                    <span style="font-size:8px; color:var(--text-gray); display:block; text-transform:uppercase; letter-spacing:0.5px; margin-bottom:2px;">Motion API</span>
+                    <strong id="telemetry-devicemotion-avail" style="font-size:11px; color:var(--text-main); font-family:var(--font-heading);">Checking...</strong>
+                </div>
+                <div style="background:rgba(255,255,255,0.02); border:1px solid rgba(255,255,255,0.06); border-radius:12px; padding:8px; text-align:center;">
+                    <span style="font-size:8px; color:var(--text-gray); display:block; text-transform:uppercase; letter-spacing:0.5px; margin-bottom:2px;">Listener Status</span>
+                    <strong id="telemetry-listener-status" style="font-size:11px; color:var(--text-main); font-family:var(--font-heading);">Stopped</strong>
+                </div>
+            </div>
+
+            <!-- G-Force & Rotation Rate -->
+            <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:10px;">
+                <div style="background:rgba(255,255,255,0.02); border:1px solid rgba(255,255,255,0.06); border-radius:12px; padding:10px; text-align:center;">
+                    <span style="font-size:9px; color:var(--text-gray); display:block; text-transform:uppercase; letter-spacing:0.5px; margin-bottom:2px;">Net G-Force</span>
+                    <strong id="telemetry-gforce" style="font-size:18px; color:var(--text-main); font-family:var(--font-heading);">1.00 G</strong>
+                </div>
+                <div style="background:rgba(255,255,255,0.02); border:1px solid rgba(255,255,255,0.06); border-radius:12px; padding:10px; text-align:center;">
+                    <span style="font-size:9px; color:var(--text-gray); display:block; text-transform:uppercase; letter-spacing:0.5px; margin-bottom:2px;">Gyro Rotation</span>
+                    <strong id="telemetry-rot" style="font-size:12px; color:var(--text-main); font-family:var(--font-heading); line-height:1.8;">0°/s</strong>
+                </div>
+            </div>
+
+            <!-- Accel Coordinates X, Y, Z -->
+            <div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:8px; margin-bottom:10px;">
+                <div style="background:rgba(255,255,255,0.01); border:1px solid rgba(255,255,255,0.04); border-radius:8px; padding:8px; text-align:center;">
+                    <span style="font-size:8px; color:var(--text-gray); display:block; text-transform:uppercase; letter-spacing:0.5px; margin-bottom:2px;">Acc X</span>
+                    <span id="telemetry-acc-x" style="font-size:11px; font-weight:700; color:var(--text-main);">0.00</span>
+                </div>
+                <div style="background:rgba(255,255,255,0.01); border:1px solid rgba(255,255,255,0.04); border-radius:8px; padding:8px; text-align:center;">
+                    <span style="font-size:8px; color:var(--text-gray); display:block; text-transform:uppercase; letter-spacing:0.5px; margin-bottom:2px;">Acc Y</span>
+                    <span id="telemetry-acc-y" style="font-size:11px; font-weight:700; color:var(--text-main);">0.00</span>
+                </div>
+                <div style="background:rgba(255,255,255,0.01); border:1px solid rgba(255,255,255,0.04); border-radius:8px; padding:8px; text-align:center;">
+                    <span style="font-size:8px; color:var(--text-gray); display:block; text-transform:uppercase; letter-spacing:0.5px; margin-bottom:2px;">Acc Z</span>
+                    <span id="telemetry-acc-z" style="font-size:11px; font-weight:700; color:var(--text-main);">0.00</span>
+                </div>
+            </div>
+
+            <!-- Shake count & Timestamp -->
+            <div style="display:grid; grid-template-columns:1fr 1.2fr; gap:10px; margin-bottom:12px;">
+                <div style="background:rgba(255,255,255,0.02); border:1px solid rgba(255,255,255,0.06); border-radius:12px; padding:10px; text-align:center;">
+                    <span style="font-size:9px; color:var(--text-gray); display:block; text-transform:uppercase; letter-spacing:0.5px; margin-bottom:2px;">Shake Count</span>
+                    <strong id="telemetry-shake-count" style="font-size:16px; color:var(--text-main); font-family:var(--font-heading);">0</strong>
+                </div>
+                <div style="background:rgba(255,255,255,0.02); border:1px solid rgba(255,255,255,0.06); border-radius:12px; padding:10px; text-align:center;">
+                    <span style="font-size:9px; color:var(--text-gray); display:block; text-transform:uppercase; letter-spacing:0.5px; margin-bottom:2px;">Last Detection</span>
+                    <strong id="telemetry-last-trigger" style="font-size:11px; color:var(--text-main); font-family:var(--font-heading); line-height:1.8;">Never</strong>
+                </div>
+            </div>
+            
+            <div style="background:rgba(255,255,255,0.02); border:1px solid rgba(255,255,255,0.06); border-radius:12px; padding:10px 12px; margin-bottom:14px; text-align:left;">
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
+                    <span style="font-size:10px; color:var(--text-muted); font-weight:600;">Engine Activity Standard Dev</span>
+                    <span id="telemetry-activity" style="font-size:10px; color:var(--text-gray); font-weight:700;">Stable</span>
+                </div>
+                <div style="width:100%; height:4px; background:rgba(255,255,255,0.05); border-radius:2px; overflow:hidden;">
+                    <div id="telemetry-activity-bar" style="width:10%; height:100%; background:var(--accent-green); transition: width 0.1s ease, background-color 0.2s;"></div>
+                </div>
+                <div style="display:flex; justify-content:space-between; font-size:9px; color:var(--text-gray); margin-top:4px;">
+                    <span id="telemetry-orient">Pitch: 0° · Roll: 0°</span>
+                    <span id="telemetry-samples">Buffer: 0/30</span>
+                </div>
+            </div>
+            
+            <p style="font-size:11px; color:var(--text-muted); margin-bottom:12px; line-height:1.4;">Real-time automated detection requires calibration of internal accelerometers and gyroscopes.</p>
+            <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:8px;">
+                <button class="btn-primary" id="btn-request-sensor-perms" style="background:rgba(0,209,255,0.08); color:var(--primary); border:1px solid rgba(0,209,255,0.25); box-shadow:none; width:100%; font-size:12px; padding:0 8px; min-height:44px;">
+                    Calibrate Sensors
+                </button>
+                <button class="btn-primary" id="btn-test-motion-sensor" style="background:rgba(0,209,255,0.08); color:var(--primary); border:1px solid rgba(0,209,255,0.25); box-shadow:none; width:100%; font-size:12px; padding:0 8px; min-height:44px;">
+                    Test Motion Sensor
+                </button>
+            </div>
+            <button class="btn-primary" id="btn-simulate-crash-test" onclick="triggerImpactDetected(9.8, 'Manual Simulation')" style="background:rgba(239,68,68,0.08); color:#EF4444; border:1px solid rgba(239,68,68,0.25); box-shadow:none; width:100%; min-height:44px;">
+                ⚡ Trigger SOS Test
+            </button>
+            <p id="sensor-permission-status" style="font-size:11px; color:var(--text-gray); margin-top:8px; text-align:center;">Real-time motion sensing: Not Active</p>
+    </div>
+    <!-- ════════════════ CONTACTS SCREEN ════════════════ -->
+    <div id="contacts-screen" class="screen">
+        <div style="display:flex;align-items:center;gap:12px;margin-bottom:20px;margin-top:4px;">
+            <span style="cursor:pointer;font-size:20px;color:var(--text-muted);" onclick="navigate('profile-screen')">←</span>
+            <span style="font-size:18px;font-weight:800;font-family:var(--font-heading);color:var(--text-main);">Emergency Contacts</span>
+        </div>
+
+        <div class="generic-card" style="text-align:left;">
+            <h3 style="font-family:var(--font-heading); font-size:14px; font-weight:700; color:var(--primary); margin-bottom:12px;">Add Trusted Contact</h3>
+            
+            <input type="text" id="contact-name" placeholder="Contact Name (e.g., Mom)" style="margin-bottom:12px;">
+            <input type="tel" id="contact-phone" placeholder="Phone Number (10 digits)" style="margin-bottom:12px;">
+            
+            <div style="display:flex; gap:12px; align-items:center; margin-bottom:14px; justify-content:space-between; width:100%;">
+                <select id="contact-relation" style="flex:1.2; margin-bottom:0;">
+                    <option value="Family">Family Member</option>
+                    <option value="Friend">Close Friend</option>
+                    <option value="Doctor">Family Doctor</option>
+                    <option value="Other">Other</option>
+                </select>
+                
+                <label style="display:flex; align-items:center; gap:8px; font-size:13px; color:var(--text-main); cursor:pointer; font-weight:600; flex-shrink:0;">
+                    <input type="checkbox" id="contact-priority" style="width:16px; height:16px; margin:0; cursor:pointer;"> Priority SOS
+                </label>
+            </div>
+            
+            <button class="btn-primary" id="btn-add-contact">
+                Save Emergency Contact
+            </button>
+        </div>
+
+        <div style="font-weight:700; font-size:12px; margin:20px 4px 8px; color:var(--text-gray); text-transform:uppercase; letter-spacing:0.8px; text-align:left;">
+            Trusted Network
+        </div>
+
+        <div id="contacts-list-container">
+            <!-- Dynamic Contacts injected here -->
+        </div>
+    </div>
+
+    <!-- Emergency Verification Overlay -->
+    <div id="emergency-verification-overlay" style="display:none;">
+        <div class="emergency-particles">
+            <div class="particle p1"></div>
+            <div class="particle p2"></div>
+            <div class="particle p3"></div>
+            <div class="particle p4"></div>
+            <div class="particle p5"></div>
+        </div>
+        <div class="emergency-verification-card">
+            <div class="emergency-scanner-line"></div>
+            <div class="emergency-siren-glow"></div>
+            
+            <!-- SOS Animation & Ripple Rings -->
+            <div class="sos-ripple-rings">
+                <div class="ring"></div>
+                <div class="ring"></div>
+                <div class="ring"></div>
+            </div>
+            
+            <div class="emergency-pulsing-circle">
+                <div class="countdown-number" id="emergency-timer-number">15</div>
+                <svg class="countdown-svg">
+                    <circle r="40" cx="50" cy="50" class="countdown-track"></circle>
+                    <circle r="40" cx="50" cy="50" class="countdown-bar" id="emergency-timer-bar"></circle>
+                </svg>
+            </div>
+            
+            <h2 class="emergency-title">⚠ POSSIBLE EMERGENCY DETECTED</h2>
+            <p class="emergency-subtitle">Severe impact detected. Sending emergency assistance in <span id="emergency-timer-sec">15</span> seconds.</p>
+            
+            <!-- Live Location Indicator -->
+            <div class="emergency-location-indicator">
+                <span class="location-pulse"></span>
+                <span id="emergency-live-location-txt">📍 Pinpointing GPS coordinates...</span>
+            </div>
+            
+            <div class="emergency-indicator-panel">
+                <div class="indicator-item" id="ind-impact">
+                    <span class="ind-dot active"></span> Impact: <span id="lbl-impact-force">9.8G</span>
+                </div>
+                <div class="indicator-item" id="ind-activity">
+                    <span class="ind-dot active" id="dot-activity"></span> User State: <span id="lbl-activity-state">Inactive</span>
+                </div>
+            </div>
+
+            <div class="emergency-action-buttons">
+                <button class="btn-safe" id="btn-confirm-safe">I'M FINE</button>
+                <button class="btn-help" id="btn-request-help">SEND SOS NOW</button>
+            </div>
+            
+            <div class="emergency-popup-footer">
+                <span id="popup-audio-toggle" style="cursor:pointer;">🔊 Sound Alert On</span>
+            </div>
+        </div>
+    </div>
+
+</div><!-- /#app-container -->
+
+<!-- Leaflet JS -->
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+
+
+
+    <script src="script.js"></script>
+</body>
+
+</html>
+
